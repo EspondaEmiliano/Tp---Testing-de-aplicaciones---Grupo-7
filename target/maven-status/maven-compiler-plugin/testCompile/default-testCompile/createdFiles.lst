@@ -1,0 +1,5 @@
+base\TestBase.class
+lotes\CrearExamenTest.class
+lotes\GestionTemasExamenTest.class
+lotes\ValidacionesExamenTest.class
+lotes\LoginTest.class

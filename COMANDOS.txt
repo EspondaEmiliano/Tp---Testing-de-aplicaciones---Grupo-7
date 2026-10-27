@@ -1,0 +1,172 @@
+================================================================================
+GUÍA DE COMANDOS DE EJECUCIÓN - SUITE DE AUTOMATIZACIÓN RENDIX
+================================================================================
+
+Este documento contiene todos los comandos necesarios para ejecutar la suite de 
+pruebas automatizadas con Maven y Playwright, desglosados por lote y por caso 
+individual.
+
+> NOTA SOBRE MAVEN WRAPPER EN WINDOWS:
+  - Puedes usar 'mvn' si tienes Maven en el PATH, o '.\mvnw.cmd' utilizando el 
+    wrapper incluido en la raíz del proyecto.
+  - Para ejecutar Chromium en segundo plano (sin abrir la ventana gráfica del 
+    navegador), agrega el parámetro '-Dheadless=true' al final de cualquier comando.
+    Ejemplo: .\mvnw.cmd test "-Dgroups=lote-login" "-Dheadless=true"
+
+================================================================================
+COMANDOS GLOBALES Y REPORTES
+================================================================================
+
+1. Ejecutar TODOS los tests del proyecto:
+   Maven:         mvn test
+   Maven Wrapper: .\mvnw.cmd test
+
+2. Limpiar evidencias previas y ejecutar TODOS los tests desde cero:
+   Maven:         mvn clean test
+   Maven Wrapper: .\mvnw.cmd clean test
+
+3. Levantar el servidor interactivo de Allure Report (Dashboard web en vivo):
+   Maven:         mvn allure:serve
+   Maven Wrapper: .\mvnw.cmd allure:serve
+
+4. Generar reporte HTML estático de Allure (en target/site/allure-maven-plugin/):
+   Maven:         mvn allure:report
+   Maven Wrapper: .\mvnw.cmd allure:report
+
+
+================================================================================
+LOTE 1: LOGIN (Casos ID-001 al ID-008)
+Clase: lotes.LoginTest | Tag: lote-login
+================================================================================
+
+--- Ejecución del LOTE COMPLETO ---
+Maven:         mvn test -Dgroups="lote-login"
+Maven Wrapper: .\mvnw.cmd test "-Dgroups=lote-login"
+
+--- Desglose por TEST INDIVIDUAL ---
+
+* ID-001 - Login Exitoso:
+  Maven:         mvn test -Dtest=LoginTest#testID001_LoginExitoso
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=LoginTest#testID001_LoginExitoso"
+
+* ID-002 - Cierre de Sesión:
+  Maven:         mvn test -Dtest=LoginTest#testID002_CierreDeSesion
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=LoginTest#testID002_CierreDeSesion"
+
+* ID-003 - Usuario No Registrado:
+  Maven:         mvn test -Dtest=LoginTest#testID003_UsuarioNoRegistrado
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=LoginTest#testID003_UsuarioNoRegistrado"
+
+* ID-004 - Espacios y Mayúsculas en Usuario:
+  Maven:         mvn test -Dtest=LoginTest#testID004_EspaciosYMayusculasEnUsuario
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=LoginTest#testID004_EspaciosYMayusculasEnUsuario"
+
+* ID-005 - Credenciales Inválidas:
+  Maven:         mvn test -Dtest=LoginTest#testID005_CredencialesInvalidas
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=LoginTest#testID005_CredencialesInvalidas"
+
+* ID-006 - Campos Vacíos:
+  Maven:         mvn test -Dtest=LoginTest#testID006_CamposVacios
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=LoginTest#testID006_CamposVacios"
+
+* ID-007 - Intentos Fallidos:
+  Maven:         mvn test -Dtest=LoginTest#testID007_IntentosFallidos
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=LoginTest#testID007_IntentosFallidos"
+
+* ID-008 - Contraseña Sensible a Mayúsculas:
+  Maven:         mvn test -Dtest=LoginTest#testID008_ContrasenaSensibleAMayusculas
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=LoginTest#testID008_ContrasenaSensibleAMayusculas"
+
+
+================================================================================
+LOTE 2: CREAR EXAMEN (Casos ID-009, ID-010 e ID-011)
+Clase: lotes.CrearExamenTest | Tag: lote-crear-examen
+================================================================================
+
+--- Ejecución del LOTE COMPLETO ---
+Maven:         mvn test -Dgroups="lote-crear-examen"
+Maven Wrapper: .\mvnw.cmd test "-Dgroups=lote-crear-examen"
+
+--- Desglose por TEST INDIVIDUAL ---
+
+* ID-009 - Crear exámen en borrador:
+  Maven:         mvn test -Dtest=CrearExamenTest#testID009_CrearExamenEnBorrador
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=CrearExamenTest#testID009_CrearExamenEnBorrador"
+
+* ID-010 - Examen en borrador no visible para los alumnos:
+  Maven:         mvn test -Dtest=CrearExamenTest#testID010_ExamenEnBorradorNoVisibleParaAlumnos
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=CrearExamenTest#testID010_ExamenEnBorradorNoVisibleParaAlumnos"
+
+* ID-011 - Restricción de publicación sin requisitos mínimos:
+  Maven:         mvn test -Dtest=CrearExamenTest#testID011_RestriccionPublicacionSinRequisitosMinimos
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=CrearExamenTest#testID011_RestriccionPublicacionSinRequisitosMinimos"
+
+
+================================================================================
+LOTE 3: VALIDACIONES DE EXAMEN (Casos ID-013, ID-014 e ID-015)
+Clase: lotes.ValidacionesExamenTest | Tag: lote-validaciones-examen
+================================================================================
+
+--- Ejecución del LOTE COMPLETO ---
+Maven:         mvn test -Dgroups="lote-validaciones-examen"
+Maven Wrapper: .\mvnw.cmd test "-Dgroups=lote-validaciones-examen"
+
+--- Desglose por TEST INDIVIDUAL ---
+
+* ID-013 - Asignación de puntaje válido en consigna:
+  Maven:         mvn test -Dtest=ValidacionesExamenTest#testID013_AsignacionPuntajeValidoEnConsigna
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ValidacionesExamenTest#testID013_AsignacionPuntajeValidoEnConsigna"
+
+* ID-014 - Validación de puntaje fuera de rango o inválido:
+  Maven:         mvn test -Dtest=ValidacionesExamenTest#testID014_ValidacionPuntajeFueraDeRangoOInvalido
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ValidacionesExamenTest#testID014_ValidacionPuntajeFueraDeRangoOInvalido"
+
+* ID-015 - Validación del campo tiempo límite - Rango y Formato:
+  Maven:         mvn test -Dtest=ValidacionesExamenTest#testID015_ValidacionCampoTiempoLimite
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ValidacionesExamenTest#testID015_ValidacionCampoTiempoLimite"
+
+
+================================================================================
+LOTE 4: GESTIÓN DE TEMAS Y PUNTAJES (Casos ID-019 al ID-026)
+Clase: lotes.GestionTemasExamenTest | Tag: lote-temas-examen
+================================================================================
+
+--- Ejecución del LOTE COMPLETO ---
+Maven:         mvn test -Dgroups="lote-temas-examen"
+Maven Wrapper: .\mvnw.cmd test "-Dgroups=lote-temas-examen"
+
+--- Desglose por TEST INDIVIDUAL ---
+
+* ID-019 - Creación de examen con múltiples temas simétricos en puntaje:
+  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID019_CrearExamenConMultiplesTemasSimetricos
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID019_CrearExamenConMultiplesTemasSimetricos"
+
+* ID-020 - Restricción de temas con nombres repetidos:
+  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID020_TemasConNombreRepetido
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID020_TemasConNombreRepetido"
+
+* ID-021 - Examen con campo de tema vacío:
+  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID021_ExamenConCampoDeTemaVacio
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID021_ExamenConCampoDeTemaVacio"
+
+* ID-022 - Examen con consignas con puntaje total menor a 0:
+  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID022_ConsignasConPuntajeTotalMenorACero
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID022_ConsignasConPuntajeTotalMenorACero"
+
+* ID-023 - Examen con consignas con puntaje total mayor a 10:
+  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID023_ConsignasConPuntajeTotalMayorADiez
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID023_ConsignasConPuntajeTotalMayorADiez"
+
+* ID-024 - Bloqueo de creación por disparidad en el puntaje total entre temas:
+  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID024_DisparidadPuntajeEntreTemas
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID024_DisparidadPuntajeEntreTemas"
+
+* ID-025 - Edición permitida en examen no iniciado:
+  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID025_EdicionPermitidaExamenNoIniciado
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID025_EdicionPermitidaExamenNoIniciado"
+
+* ID-026 - Edición bloqueada en examen iniciado por un alumno:
+  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID026_EdicionBloqueadaExamenIniciado
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID026_EdicionBloqueadaExamenIniciado"
+
+================================================================================
