@@ -7,6 +7,7 @@ import com.microsoft.playwright.Playwright;
 public class Main {
     public static void main(String[] args) {
         // Credenciales de acceso (puedes modificarlas con tu usuario y contraseña si tienes una cuenta propia)
+        String baseUrl = System.getProperty("baseUrl", "https://rendix.vercel.app");
         String usuario = "profesor1";
         String password = "rendix123";
 
@@ -24,8 +25,8 @@ public class Main {
             Page page = browser.newPage();
 
             // 1. Navegar a la página de login
-            System.out.println("Navegando a https://rendix.vercel.app/login...");
-            page.navigate("https://rendix.vercel.app/login");
+            System.out.println("Navegando a " + baseUrl + "/login...");
+            page.navigate(baseUrl + "/login");
 
             // 2. Ingresar usuario
             System.out.println("Completando usuario: " + usuario);
@@ -55,7 +56,7 @@ public class Main {
 
             // 6. Espera de 6000 ms para visualizar el resultado en el navegador
             System.out.println("Esperando 6 segundos para visualizar la plataforma con la sesión iniciada...");
-            page.waitForTimeout(60000);
+            page.waitForTimeout(6000);
 
             // 7. Cierre del navegador
             System.out.println("Cerrando navegador...");

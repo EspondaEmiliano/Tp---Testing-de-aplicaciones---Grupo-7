@@ -1,24 +1,31 @@
 package lotes;
 
 import base.TestBase;
+import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.Locator;
+import com.microsoft.playwright.Page;
+import com.microsoft.playwright.Response;
+import helpers.AuthHelper;
+import helpers.ClockMockHelper;
+import helpers.ExamFormHelper;
 import io.qameta.allure.Description;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.Story;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * ============================================================================
- * Lote: Gestión de Temas y Puntajes (Casos ID-019 al ID-026)
+ * Lote: Gestión de Temas y Puntajes (Casos ID-036 al ID-043)
  *
  * Comando para ejecutar en terminal:
  *   mvn test -Dgroups="lote-temas-examen"
@@ -32,163 +39,103 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Tag("lote-temas-examen")
 public class GestionTemasExamenTest extends TestBase {
 
-    private static final String NUEVO_PARCIAL_URL = "https://rendix.vercel.app/documentos/nuevo";
-
     @BeforeEach
     void setUpGestionTemas() {
-        // Fijamos fecha y hora de referencia a las 10:00 para validar horarios vespertinos futuros
-        page.addInitScript("Date.now = () => new Date('2026-10-22T10:00:00').getTime();");
+        ClockMockHelper.instalarRelojSimulado(page);
+        AuthHelper.loginProfesor(page, baseUrl);
+        ClockMockHelper.clearSimTime(page);
+        ExamFormHelper.navegarANuevoExamen(page, baseUrl);
+    }
 
-        // Iniciar sesión como profesor
-        page.navigate("https://rendix.vercel.app/login");
-        Locator logoutBtn = page.locator("button:has-text('Cerrar sesión')");
-        if (logoutBtn.count() > 0 && logoutBtn.first().isVisible()) {
-            logoutBtn.first().click();
-            page.waitForURL(url -> url.endsWith("/login"));
-        }
-        page.locator("label:has-text('Usuario o mail') input, input:not([type='password'])").first().fill("profesor1");
-        page.locator("input[type='password']").fill("rendix123");
-        page.locator("button[type='submit'], button:has-text('Ingresar')").click();
-        page.waitForURL(url -> !url.endsWith("/login"));
-
-        // Navegar a la vista de creación de examen
-        page.navigate(NUEVO_PARCIAL_URL);
-        page.waitForSelector("form");
+    @AfterEach
+    void tearDownGestionTemas() {
+        ClockMockHelper.clearSimTime(page);
+        ExamFormHelper.limpiarExamenesCreados(baseUrl);
     }
 
     // ========================================================================
-    // 1. GESTIÓN DE TEMAS (ID-019 a ID-021)
+    // 1. GESTIÓN DE TEMAS (ID-036 a ID-038)
     // ========================================================================
 
     @Test
     @Tag("lote-temas-examen")
-    @Story("ID-019 - Creación de examen con múltiples temas simétricos en puntaje")
-    @DisplayName("ID-019 - Creación de examen con múltiples temas simétricos en puntaje")
-    @Description("Crea un Tema 1 con 2 consignas de 5 puntos c/u, y un Tema 2 con 1 consigna de 10 puntos. Valida que el examen se crea correctamente con ambos temas.")
+    @Story("ID-036 - Creación exitosa de múltiples temas para un parcial")
+    @DisplayName("ID-036 - Creación exitosa de múltiples temas para un parcial")
+    @Description("Verificar que un profesor pueda crear al menos 2 temas distintos para un mismo parcial con sus respectivas consignas y puntajes válidos (Tema A y Tema B con 10 puntos cada uno) y guardar en < 1s.")
     @Severity(SeverityLevel.CRITICAL)
-    void testID019_CrearExamenConMultiplesTemasSimetricos() {
-        String titulo = "Parcial Multi-Tema ID-019 " + System.currentTimeMillis();
+    void testID036_CreacionExitosaDeMultiplesTemasParaUnParcial() {
+        String titulo = "Parcial Multi-Tema ID-036 " + System.currentTimeMillis();
 
         // 1. Completar campos base del examen
-        page.locator("label:has-text('Clase') select").selectOption("matematicas");
-        page.locator("label:has-text('Título') input").fill(titulo);
-        page.locator("label:has-text('Duración') input[type='number']").fill("60");
-        page.locator("label:has-text('Turno') select").selectOption("tarde");
-        page.locator("input[type='date']").fill("2026-10-22");
-        page.locator("input[type='time']").fill("13:30");
+        ExamFormHelper.completarCamposBase(page, titulo, "Tema 1", "60", "Consigna 1 de Tema A (5 puntos)");
 
-        // 2. Configurar Tema 1
-        Locator selectorTema = page.locator("label:has-text('Tema') select, input[placeholder*='tema'], input[name*='tema']").first();
-        if (selectorTema.isVisible()) {
-            if ("select".equalsIgnoreCase(selectorTema.evaluate("el => el.tagName").toString())) {
-                selectorTema.selectOption("Tema 1");
-            } else {
-                selectorTema.fill("Tema 1");
-            }
-        }
-
-        // Consigna 1 de Tema 1 con 5 puntos
-        Locator consignas = page.locator("textarea[placeholder*='consigna'], textarea");
-        consignas.first().fill("Consigna 1 del Tema 1 (5 puntos)");
-        Locator puntajeInputs = page.locator("label:has-text('Puntaje') input, input[name*='puntaje'], input[placeholder*='puntaje'], .score-input");
+        Locator puntajeInputs = page.locator("input.puntaje-input, label:has-text('Puntaje') input");
         if (puntajeInputs.count() > 0 && puntajeInputs.first().isVisible()) {
             puntajeInputs.first().fill("5");
         }
 
-        // Agregar Consigna 2 a Tema 1 con 5 puntos
-        Locator btnAgregarConsigna = page.locator("button:has-text('Agregar consigna'), button:has-text('+ Consigna'), .add-question");
-        if (btnAgregarConsigna.count() > 0 && btnAgregarConsigna.first().isVisible()) {
-            btnAgregarConsigna.first().click();
-            if (consignas.count() > 1) {
-                consignas.nth(1).fill("Consigna 2 del Tema 1 (5 puntos)");
-            }
-            if (puntajeInputs.count() > 1) {
-                puntajeInputs.nth(1).fill("5");
-            }
+        // Agregar segunda consigna de 5 puntos (Total: 10)
+        Locator selectAgregarApartado = page.locator("select.block-add, select[aria-label='Agregar apartado']");
+        if (selectAgregarApartado.count() > 0 && selectAgregarApartado.first().isVisible()) {
+            selectAgregarApartado.first().selectOption("texto");
+            page.locator("textarea[placeholder*='consigna']").nth(1).fill("Consigna 2 de Tema A (5 puntos)");
+            puntajeInputs.nth(1).fill("5");
         }
 
-        // 3. Configurar Tema 2 con 1 consigna de 10 puntos
+        // 2. Intentar configurar un segundo tema ("Tema B" / "Tema 2") dentro del mismo parcial
         Locator btnAgregarTema = page.locator("button:has-text('Agregar tema'), button:has-text('+ Tema'), .add-theme");
         boolean permiteMultiplesTemas = btnAgregarTema.count() > 0 && btnAgregarTema.first().isVisible();
 
         if (permiteMultiplesTemas) {
             btnAgregarTema.first().click();
             Locator inputTema2 = page.locator("input[placeholder*='tema'], select[name*='tema']").last();
-            if ("select".equalsIgnoreCase(inputTema2.evaluate("el => el.tagName").toString())) {
-                inputTema2.selectOption("Tema 2");
-            } else {
-                inputTema2.fill("Tema 2");
-            }
+            inputTema2.fill("Tema B");
 
-            Locator consignasTema2 = page.locator(".tema-2 textarea, textarea").last();
-            consignasTema2.fill("Consigna 1 del Tema 2 (10 puntos)");
-            Locator puntajesTema2 = page.locator(".tema-2 input[type='number'], input[placeholder*='puntaje']").last();
-            if (puntajesTema2.isVisible()) {
-                puntajesTema2.fill("10");
-            }
+            long inicio = System.currentTimeMillis();
+            Response resp = page.waitForResponse(
+                    r -> r.url().contains("/api/documentos") && r.request().method().equalsIgnoreCase("POST"),
+                    () -> page.locator("button[type='submit']:has-text('Crear')").click()
+            );
+            long duracionMs = System.currentTimeMillis() - inicio;
 
-            // Guardar examen
-            page.locator("button[type='submit']:has-text('Crear')").click();
-            page.waitForURL(url -> url.matches(".*/documentos/[a-zA-Z0-9-]+$"));
+            page.waitForURL(url -> !url.endsWith("/nuevo") && url.contains("/documentos/"));
+            ExamFormHelper.registrarExamenParaLimpieza(page.url());
 
-            // Validar que se creó correctamente con ambos temas
-            boolean tema1Presente = page.locator("text='Tema 1'").isVisible();
-            boolean tema2Presente = page.locator("text='Tema 2'").isVisible();
-            assertTrue(tema1Presente && tema2Presente,
-                    "El examen no se creó correctamente con ambos temas ('Tema 1' y 'Tema 2').");
+            assertTrue(resp.ok(), "Error HTTP al guardar el examen multi-tema: " + resp.status());
+            assertTrue(duracionMs <= perfToleranceMs,
+                    "El guardado del parcial con múltiples temas excedió el tiempo esperado (" + duracionMs + " ms).");
+
+            boolean temaAPresente = page.locator("text='Tema A'").isVisible() || page.locator("text='Tema 1'").isVisible();
+            boolean temaBPresente = page.locator("text='Tema B'").isVisible() || page.locator("text='Tema 2'").isVisible();
+            assertTrue(temaAPresente && temaBPresente,
+                    "El examen no se creó correctamente con ambos temas ('Tema A' y 'Tema B').");
         } else {
-            // Asertar contra la regla de negocio esperada documentada
             assertTrue(permiteMultiplesTemas,
-                    "La interfaz no permite crear un examen con múltiples temas ('Tema 1' con 2 consignas de 5 pts y 'Tema 2' con 1 consigna de 10 pts).");
+                    "[Bug ID-036] La interfaz no permite agregar múltiples temas simultáneos ('Tema A' y 'Tema B') para un mismo parcial.");
         }
     }
 
     @Test
     @Tag("lote-temas-examen")
-    @Story("ID-020 - Restricción de temas con nombres repetidos")
-    @DisplayName("ID-020 - Restricción de temas con nombres repetidos")
-    @Description("Intenta crear dos temas distintos pero ambos con el nombre 'Tema 1'. Aserta que el sistema impide la creación e indica que el nombre está repetido.")
+    @Story("ID-037 - Validación de unicidad de nombre de tema por parcial")
+    @DisplayName("ID-037 - Validación de unicidad de nombre de tema por parcial")
+    @Description("Impedir que se creen dos temas con exactamente el mismo nombre dentro de un mismo parcial.")
     @Severity(SeverityLevel.NORMAL)
-    void testID020_TemasConNombreRepetido() {
-        // 1. Completar campos base
-        page.locator("label:has-text('Clase') select").selectOption("matematicas");
-        page.locator("label:has-text('Título') input").fill("Parcial Temas Repetidos");
-        page.locator("label:has-text('Duración') input[type='number']").fill("60");
-        page.locator("label:has-text('Turno') select").selectOption("tarde");
-        page.locator("input[type='date']").fill("2026-10-22");
-        page.locator("input[type='time']").fill("13:30");
-        page.locator("textarea[placeholder*='consigna'], textarea").first().fill("Consigna para test de temas repetidos.");
+    void testID037_ValidacionDeUnicidadDeNombreDeTemaPorParcial() {
+        ExamFormHelper.completarCamposBase(page, "Parcial Temas Repetidos ID-037", "Tema 1", "60", "Consigna para test de temas repetidos.");
 
-        // 2. Establecer el primer tema como 'Tema 1'
-        Locator selectorTema = page.locator("label:has-text('Tema') select, input[placeholder*='tema'], input[name*='tema']").first();
-        if (selectorTema.isVisible()) {
-            if ("select".equalsIgnoreCase(selectorTema.evaluate("el => el.tagName").toString())) {
-                selectorTema.selectOption("Tema 1");
-            } else {
-                selectorTema.fill("Tema 1");
-            }
-        }
-
-        // 3. Intentar agregar un segundo tema también con el nombre 'Tema 1'
         Locator btnAgregarTema = page.locator("button:has-text('Agregar tema'), button:has-text('+ Tema'), .add-theme");
         boolean permiteMultiplesTemas = btnAgregarTema.count() > 0 && btnAgregarTema.first().isVisible();
 
         if (permiteMultiplesTemas) {
             btnAgregarTema.first().click();
             Locator inputTema2 = page.locator("input[placeholder*='tema'], select[name*='tema']").last();
-            if ("select".equalsIgnoreCase(inputTema2.evaluate("el => el.tagName").toString())) {
-                inputTema2.selectOption("Tema 1");
-            } else {
-                inputTema2.fill("Tema 1");
-            }
+            inputTema2.fill("Tema 1");
 
-            // Intentar crear el examen
             page.locator("button[type='submit']:has-text('Crear')").click();
-            page.waitForTimeout(500);
+            page.locator("p.error, .field-error").first().waitFor();
 
-            // Validar que el sistema impide la creación e indica que el nombre está repetido
-            Locator errorMsg = page.locator("p.error, .field-error, .toast-error");
-            String textoError = errorMsg.isVisible() ? errorMsg.innerText().toLowerCase() : "";
+            String textoError = String.join(" ", page.locator("p.error, .field-error, .toast-error").allInnerTexts()).toLowerCase();
             boolean indicaNombreRepetido = textoError.contains("repetido") ||
                     textoError.contains("duplicado") ||
                     textoError.contains("mismo nombre") ||
@@ -198,356 +145,312 @@ public class GestionTemasExamenTest extends TestBase {
             assertTrue(impidioCreacion && indicaNombreRepetido,
                     "El sistema no impidió la creación ni alertó sobre nombres de tema repetidos ('Tema 1'). Texto de error: " + textoError);
         } else {
-            // Si la interfaz no soporta múltiples temas para poder duplicar sus nombres
             assertTrue(permiteMultiplesTemas,
-                    "La interfaz no permite agregar temas múltiples para validar la restricción por nombres repetidos ('Tema 1').");
+                    "[Bug ID-037] La interfaz no permite agregar temas múltiples para validar la restricción por nombres repetidos ('Tema 1').");
         }
     }
 
     @Test
     @Tag("lote-temas-examen")
-    @Story("ID-021 - Examen con campo de tema vacío")
-    @DisplayName("ID-021 - Examen con campo de tema vacío")
+    @Story("ID-038 - Creación de temas mediante pestañas expansibles (hasta 3)")
+    @DisplayName("ID-038 - Creación de temas mediante pestañas expansibles (hasta 3)")
+    @Description("Verificar que el sistema permita crear hasta 3 temas para un parcial y editar cada uno seleccionándolo desde su pestaña expansible.")
+    @Severity(SeverityLevel.CRITICAL)
+    void testID038_CreacionDeTemasMediantePestanasExpansibles() {
+        String titulo = "Parcial Pestañas ID-038 " + System.currentTimeMillis();
+        ExamFormHelper.completarCamposBase(page, titulo, "Tema 1", "60", "Consigna 1 del Tema 1 (5 puntos)");
+
+        Locator puntajeInputs = page.locator("input.puntaje-input, label:has-text('Puntaje') input");
+        if (puntajeInputs.count() > 0 && puntajeInputs.first().isVisible()) {
+            puntajeInputs.first().fill("5");
+        }
+
+        // Agregar Consigna 2 a Tema 1 con 5 puntos
+        Locator selectAgregarApartado = page.locator("select.block-add, select[aria-label='Agregar apartado']");
+        if (selectAgregarApartado.count() > 0 && selectAgregarApartado.first().isVisible()) {
+            selectAgregarApartado.first().selectOption("texto");
+            page.locator("textarea[placeholder*='consigna']").nth(1).fill("Consigna 2 del Tema 1 (5 puntos)");
+            puntajeInputs.nth(1).fill("5");
+        }
+
+        // Verificar existencia de pestañas expansibles para agregar y editar Tema 2 y Tema 3 (hasta 3 temas)
+        Locator btnAgregarTema = page.locator("button:has-text('Agregar tema'), button:has-text('+ Tema'), .add-theme");
+        Locator pestanasTema = page.locator(".theme-tab, [role='tab']:has-text('Tema'), details.theme-panel summary");
+        boolean soportaPestanasExpansibles = (btnAgregarTema.count() > 0 && btnAgregarTema.first().isVisible())
+                || pestanasTema.count() >= 2;
+
+        if (soportaPestanasExpansibles) {
+            // Crear Tema 2 y Tema 3 (hasta 3 temas) y desplegar cada pestaña expansible
+            btnAgregarTema.first().click();
+            btnAgregarTema.first().click();
+
+            assertTrue(pestanasTema.count() >= 3, "No se generaron las 3 pestañas expansibles de temas.");
+            for (int i = 0; i < 3; i++) {
+                pestanasTema.nth(i).click();
+            }
+
+            ExamFormHelper.guardarFormularioNuevoExamen(page);
+            assertTrue(page.locator("text='Tema 1'").isVisible()
+                            && page.locator("text='Tema 2'").isVisible()
+                            && page.locator("text='Tema 3'").isVisible(),
+                    "El examen no conservó los 3 temas configurados en sus pestañas expansibles.");
+        } else {
+            assertTrue(soportaPestanasExpansibles,
+                    "[Bug ID-038] La interfaz no dispone de pestañas expansibles para crear y editar hasta 3 temas en un mismo parcial.");
+        }
+    }
+
+    @Test
+    @Tag("auxiliar")
+    @Story("Auxiliar - Validación de campo de tema vacío")
+    @DisplayName("Validación auxiliar - Examen con campo de tema vacío")
     @Description("Intenta crear el parcial dejando el nombre del tema vacío y aserta el mensaje de campo obligatorio.")
     @Severity(SeverityLevel.NORMAL)
-    void testID021_ExamenConCampoDeTemaVacio() {
-        // Completar campos mínimos requeridos
-        page.locator("label:has-text('Clase') select").selectOption("matematicas");
-        page.locator("label:has-text('Título') input").fill("Parcial Validación Tema Vacío");
-        page.locator("label:has-text('Duración') input[type='number']").fill("60");
-        page.locator("label:has-text('Turno') select").selectOption("tarde");
-        page.locator("input[type='date']").fill("2026-10-22");
-        page.locator("input[type='time']").fill("13:30");
-        page.locator("textarea[placeholder*='consigna'], textarea").first().fill("Consigna para examen con tema vacío.");
+    void testValidacionCampoDeTemaVacio() {
+        ExamFormHelper.completarCamposBase(page, "Parcial Validación Tema Vacío", null, "60", "Consigna para examen con tema vacío.");
 
-        // Dejar explícitamente el campo de tema vacío
-        Locator selectorTema = page.locator("label:has-text('Tema') select, input[name*='tema'], input[placeholder*='tema']").first();
-        if ("select".equalsIgnoreCase(selectorTema.evaluate("el => el.tagName").toString())) {
-            selectorTema.selectOption("");
-        } else {
-            selectorTema.fill("");
-        }
-
-        // Intentar guardar el examen sin tema
+        // Intentar guardar el examen sin haber seleccionado un tema
         page.locator("button[type='submit']:has-text('Crear')").click();
-        page.waitForTimeout(500);
 
-        // Validar que el sistema lo impide y despliega mensaje de campo obligatorio
-        Locator errorMsg = page.locator("p.error, .field-error");
-        String textoError = errorMsg.isVisible() ? errorMsg.innerText().toLowerCase() : "";
+        Locator errorMsg = page.locator("p.error, .field-error").first();
+        errorMsg.waitFor();
+
+        String textoError = String.join(" ", page.locator("p.error, .field-error").allInnerTexts()).toLowerCase();
         boolean impidioGuardado = page.url().contains("/documentos/nuevo");
-        boolean esInvalidoHtml5 = Boolean.TRUE.equals(selectorTema.evaluate("el => !el.checkValidity()"));
         boolean mensajeCampoObligatorio = textoError.contains("tema") ||
-                textoError.contains("obligatorio") ||
-                textoError.contains("requerido") ||
-                esInvalidoHtml5;
+                textoError.contains("elegí") ||
+                textoError.contains("obligatorio");
 
         assertTrue(impidioGuardado && mensajeCampoObligatorio,
-                "El sistema no impidió el guardado ni alertó sobre el campo obligatorio de tema vacío.");
+                "El sistema no impidió el guardado ni alertó sobre el campo obligatorio de tema vacío. Mensaje: " + textoError);
     }
 
     // ========================================================================
-    // 2. LÍMITES Y SIMETRÍA DE PUNTAJES (ID-022 a ID-024)
+    // 2. LÍMITES Y SIMETRÍA DE PUNTAJES (ID-039 a ID-041)
     // ========================================================================
 
     @Test
     @Tag("lote-temas-examen")
-    @Story("ID-022 - Examen con consignas con puntaje total menor a 0")
-    @DisplayName("ID-022 - Examen con consignas con puntaje total menor a 0")
-    @Description("Ingresa consignas cuyo puntaje total sea negativo (ej. -1). Aserta que el sistema arroja error indicando que el puntaje es menor a 0.")
+    @Story("ID-039 - Examen con consignas con puntaje sumado =-1")
+    @DisplayName("ID-039 - Examen con consignas con puntaje sumado =-1")
+    @Description("Verificar que el sistema no permite crear o guardar un tema con consignas cuya suma de puntajes sea menor a 0 (ej. -1).")
     @Severity(SeverityLevel.NORMAL)
-    void testID022_ConsignasConPuntajeTotalMenorACero() {
-        // Completar campos base
-        page.locator("label:has-text('Clase') select").selectOption("matematicas");
-        page.locator("label:has-text('Título') input").fill("Parcial Puntaje Negativo");
-        page.locator("label:has-text('Tema') select").selectOption("Tema 1");
-        page.locator("label:has-text('Duración') input[type='number']").fill("60");
-        page.locator("label:has-text('Turno') select").selectOption("tarde");
-        page.locator("input[type='date']").fill("2026-10-22");
-        page.locator("input[type='time']").fill("13:30");
-        page.locator("textarea[placeholder*='consigna'], textarea").first().fill("Consigna con puntaje negativo.");
+    void testID039_ExamenConConsignasConPuntajeSumadoNegativo() {
+        ExamFormHelper.completarCamposBase(page, "Parcial Puntaje Negativo ID-039", "Tema 1", "60", "Consigna con puntaje negativo.");
 
-        Locator puntajeInput = page.locator("label:has-text('Puntaje') input, input[name*='puntaje'], input[placeholder*='puntaje'], .score-input");
-        boolean existePuntaje = puntajeInput.count() > 0 && puntajeInput.first().isVisible();
+        Locator puntajeInput = page.locator("input.puntaje-input, label:has-text('Puntaje') input").first();
+        assertTrue(puntajeInput.isVisible(),
+                "[Bug ID-039] El sistema no dispone del motor de puntaje de consignas para validar puntaje menor a 0.");
 
-        if (existePuntaje) {
-            puntajeInput.first().fill("-1");
-            page.locator("button[type='submit']:has-text('Crear')").click();
-            page.waitForTimeout(500);
+        puntajeInput.fill("-1");
+        page.locator("button[type='submit']:has-text('Crear')").click();
 
-            Locator errorMsg = page.locator("p.error, .field-error");
-            String textoError = errorMsg.isVisible() ? errorMsg.innerText().toLowerCase() : "";
-            boolean esInvalidoHtml5 = Boolean.TRUE.equals(puntajeInput.first().evaluate("el => !el.checkValidity()"));
-            boolean errorMenorACero = textoError.contains("menor a 0") ||
-                    textoError.contains("menor que 0") ||
-                    textoError.contains("negativo") ||
-                    textoError.contains("mayor o igual a 0") ||
-                    textoError.contains("0") ||
-                    esInvalidoHtml5;
-            boolean bloqueoGuardado = page.url().contains("/documentos/nuevo");
+        Locator errorMsg = page.locator("p.error, .field-error").first();
+        errorMsg.waitFor();
 
-            assertTrue(bloqueoGuardado && errorMenorACero,
-                    "El sistema no arrojó error indicando que el puntaje es menor a 0 al ingresar puntaje -1. Texto obtenido: " + textoError);
-        } else {
-            assertTrue(existePuntaje,
-                    "El sistema no dispone del motor de puntaje de consignas para validar puntaje menor a 0.");
-        }
+        String textoError = String.join(" ", page.locator("p.error, .field-error").allInnerTexts()).toLowerCase();
+        boolean errorMenorACero = textoError.contains("puntaje") || textoError.contains("0,01");
+        boolean bloqueoGuardado = page.url().contains("/documentos/nuevo");
+
+        assertTrue(bloqueoGuardado && errorMenorACero,
+                "El sistema no arrojó error ni bloqueó el guardado al ingresar puntaje -1. Texto obtenido: " + textoError);
     }
 
     @Test
     @Tag("lote-temas-examen")
-    @Story("ID-023 - Examen con consignas con puntaje total mayor a 10")
-    @DisplayName("ID-023 - Examen con consignas con puntaje total mayor a 10")
-    @Description("Ingresa consignas cuyo puntaje total sea mayor a 10 (ej. 11). Aserta que el sistema arroja error.")
+    @Story("ID-040 - Examen con consignas con puntaje sumado =11")
+    @DisplayName("ID-040 - Examen con consignas con puntaje sumado =11")
+    @Description("Verificar que el sistema no permite crear o guardar un tema con consignas cuya suma de puntajes sea mayor a 10 (ej. 11).")
     @Severity(SeverityLevel.NORMAL)
-    void testID023_ConsignasConPuntajeTotalMayorADiez() {
-        // Completar campos base
-        page.locator("label:has-text('Clase') select").selectOption("matematicas");
-        page.locator("label:has-text('Título') input").fill("Parcial Puntaje Excedido");
-        page.locator("label:has-text('Tema') select").selectOption("Tema 1");
-        page.locator("label:has-text('Duración') input[type='number']").fill("60");
-        page.locator("label:has-text('Turno') select").selectOption("tarde");
-        page.locator("input[type='date']").fill("2026-10-22");
-        page.locator("input[type='time']").fill("13:30");
-        page.locator("textarea[placeholder*='consigna'], textarea").first().fill("Consigna con puntaje excedido.");
+    void testID040_ExamenConConsignasConPuntajeSumadoMayorADiez() {
+        String titulo = "Parcial Puntaje Excedido ID-040 " + System.currentTimeMillis();
+        ExamFormHelper.completarCamposBase(page, titulo, "Tema 1", "60", "Consigna 1 con 6 puntos.");
 
-        Locator puntajeInput = page.locator("label:has-text('Puntaje') input, input[name*='puntaje'], input[placeholder*='puntaje'], .score-input");
-        boolean existePuntaje = puntajeInput.count() > 0 && puntajeInput.first().isVisible();
+        Locator puntajeInputs = page.locator("input.puntaje-input, label:has-text('Puntaje') input");
+        assertTrue(puntajeInputs.first().isVisible(),
+                "[Bug ID-040] El sistema no dispone del motor de puntaje de consignas para bloquear excesos de puntaje (> 10).");
 
-        if (existePuntaje) {
-            puntajeInput.first().fill("11");
-            page.locator("button[type='submit']:has-text('Crear')").click();
-            page.waitForTimeout(500);
+        // Configurar 2 consignas cuyos puntajes suman 11 (6 + 5 = 11 > 10)
+        puntajeInputs.first().fill("6");
+        page.locator("select.block-add, select[aria-label='Agregar apartado']").first().selectOption("texto");
+        page.locator("textarea[placeholder*='consigna']").nth(1).fill("Consigna 2 con 5 puntos (suma 11).");
+        puntajeInputs.nth(1).fill("5");
 
-            Locator errorMsg = page.locator("p.error, .field-error");
-            String textoError = errorMsg.isVisible() ? errorMsg.innerText().toLowerCase() : "";
-            boolean esInvalidoHtml5 = Boolean.TRUE.equals(puntajeInput.first().evaluate("el => !el.checkValidity()"));
-            boolean errorExceso = textoError.contains("10") ||
-                    textoError.contains("máximo") ||
-                    textoError.contains("maximo") ||
-                    textoError.contains("supera") ||
-                    esInvalidoHtml5;
-            boolean bloqueoGuardado = page.url().contains("/documentos/nuevo");
+        page.locator("button[type='submit']:has-text('Crear')").click();
+        page.waitForCondition(() -> !page.url().endsWith("/nuevo") || page.locator("p.error, .field-error").count() > 0,
+                new Page.WaitForConditionOptions().setTimeout(5000));
 
-            assertTrue(bloqueoGuardado && errorExceso,
-                    "El sistema no arrojó error al ingresar consignas con puntaje total mayor a 10 (ej. 11). Texto obtenido: " + textoError);
-        } else {
-            assertTrue(existePuntaje,
-                    "El sistema no dispone del motor de puntaje de consignas para bloquear excesos de puntaje (> 10).");
+        if (!page.url().endsWith("/nuevo") && page.url().contains("/documentos/")) {
+            ExamFormHelper.registrarExamenParaLimpieza(page.url());
         }
+
+        String textoError = String.join(" ", page.locator("p.error, .field-error").allInnerTexts()).toLowerCase();
+        boolean errorExceso = textoError.contains("10") ||
+                textoError.contains("máximo") ||
+                textoError.contains("maximo") ||
+                textoError.contains("supera");
+        boolean bloqueoGuardado = page.url().contains("/documentos/nuevo");
+
+        assertTrue(bloqueoGuardado && errorExceso,
+                "[Bug ID-040] El sistema permitió guardar un examen cuyas consignas suman 11 puntos sin validar que el puntaje total no supere 10.");
     }
 
     @Test
     @Tag("lote-temas-examen")
-    @Story("ID-024 - Bloqueo de creación por disparidad en el puntaje total entre temas")
-    @DisplayName("ID-024 - Bloqueo de creación por disparidad en el puntaje total entre temas")
-    @Description("Intenta crear Tema 1 con consignas que sumen 7 puntos y Tema 2 con consignas que sumen 8 puntos. Aserta que el sistema bloquea la creación por disparidad.")
+    @Story("ID-041 - Examen con temas con puntaje distinto")
+    @DisplayName("ID-041 - Examen con temas con puntaje distinto")
+    @Description("Verificar que el sistema no permite crear un parcial con temas con puntaje distinto entre sí (Tema 1: 7 pts y Tema 2: 8 pts).")
     @Severity(SeverityLevel.CRITICAL)
-    void testID024_DisparidadPuntajeEntreTemas() {
-        // 1. Completar campos base
-        page.locator("label:has-text('Clase') select").selectOption("matematicas");
-        page.locator("label:has-text('Título') input").fill("Parcial Disparidad Temas");
-        page.locator("label:has-text('Duración') input[type='number']").fill("60");
-        page.locator("label:has-text('Turno') select").selectOption("tarde");
-        page.locator("input[type='date']").fill("2026-10-22");
-        page.locator("input[type='time']").fill("13:30");
+    void testID041_ExamenConTemasConPuntajeDistinto() {
+        ExamFormHelper.completarCamposBase(page, "Parcial Disparidad Temas ID-041", "Tema 1", "60", "Consigna de Tema 1 (7 puntos)");
 
-        // 2. Configurar Tema 1 con 7 puntos
-        Locator selectorTema = page.locator("label:has-text('Tema') select, input[placeholder*='tema'], input[name*='tema']").first();
-        if (selectorTema.isVisible()) {
-            if ("select".equalsIgnoreCase(selectorTema.evaluate("el => el.tagName").toString())) {
-                selectorTema.selectOption("Tema 1");
-            } else {
-                selectorTema.fill("Tema 1");
-            }
-        }
-        page.locator("textarea[placeholder*='consigna'], textarea").first().fill("Consigna de Tema 1 (7 puntos)");
-        Locator puntajeInputs = page.locator("label:has-text('Puntaje') input, input[name*='puntaje'], input[placeholder*='puntaje'], .score-input");
+        Locator puntajeInputs = page.locator("input.puntaje-input, label:has-text('Puntaje') input");
         if (puntajeInputs.count() > 0 && puntajeInputs.first().isVisible()) {
             puntajeInputs.first().fill("7");
         }
 
-        // 3. Configurar Tema 2 con 8 puntos
         Locator btnAgregarTema = page.locator("button:has-text('Agregar tema'), button:has-text('+ Tema'), .add-theme");
         boolean permiteMultiplesTemas = btnAgregarTema.count() > 0 && btnAgregarTema.first().isVisible();
 
         if (permiteMultiplesTemas) {
             btnAgregarTema.first().click();
-            Locator inputTema2 = page.locator("input[placeholder*='tema'], select[name*='tema']").last();
-            if (inputTema2.isVisible()) {
-                inputTema2.fill("Tema 2");
-            }
-            Locator consignasTema2 = page.locator(".tema-2 textarea, textarea").last();
-            consignasTema2.fill("Consigna de Tema 2 (8 puntos)");
-            Locator puntajeTema2 = page.locator(".tema-2 input[type='number'], input[placeholder*='puntaje']").last();
-            if (puntajeTema2.isVisible()) {
-                puntajeTema2.fill("8");
-            }
+            page.locator("textarea[placeholder*='consigna']").last().fill("Consigna de Tema 2 (8 puntos)");
+            puntajeInputs.last().fill("8");
 
-            // 4. Intentar crear el examen
             page.locator("button[type='submit']:has-text('Crear')").click();
-            page.waitForTimeout(500);
+            page.locator("p.error, .field-error").first().waitFor();
 
-            // 5. Validar que el sistema bloquea la creación por disparidad en el puntaje total
-            Locator errorMsg = page.locator("p.error, .field-error, .theme-score-warning, .score-mismatch");
-            String textoError = errorMsg.isVisible() ? errorMsg.innerText().toLowerCase() : "";
+            String textoError = String.join(" ", page.locator("p.error, .field-error, .theme-score-warning, .score-mismatch").allInnerTexts()).toLowerCase();
             boolean bloqueoCreacion = page.url().contains("/documentos/nuevo");
             boolean alertaDisparidad = textoError.contains("disparidad") ||
                     textoError.contains("puntaje") ||
                     textoError.contains("no coinciden") ||
-                    textoError.contains("mismo puntaje") ||
                     textoError.contains("igual");
 
             assertTrue(bloqueoCreacion && alertaDisparidad,
                     "El sistema no bloqueó la creación ni alertó sobre la disparidad de puntajes entre Tema 1 (7 pts) y Tema 2 (8 pts). Texto obtenido: " + textoError);
         } else {
-            // Asertar contra la regla de negocio documentada
             assertTrue(permiteMultiplesTemas,
-                    "El sistema no dispone de control multi-tema para configurar Tema 1 (7 pts) y Tema 2 (8 pts) y validar el bloqueo por disparidad.");
+                    "[Bug ID-041] El sistema no dispone de control multi-tema para configurar Tema 1 (7 pts) y Tema 2 (8 pts) y validar el bloqueo por disparidad.");
         }
     }
 
     // ========================================================================
-    // 3. CAMBIO DE ALCANCE EN EDICIÓN (ID-025 y ID-026)
+    // 3. EDICIÓN Y ELIMINACIÓN SEGÚN ESTADO DEL EXAMEN (ID-042 e ID-043)
     // ========================================================================
 
     @Test
     @Tag("lote-temas-examen")
-    @Story("ID-025 - Edición permitida en examen no iniciado")
-    @DisplayName("ID-025 - Edición permitida en examen no iniciado")
-    @Description("Navega a un examen ya creado pero no iniciado por alumnos. Edita cualquier campo válido y guarda. Aserta que el sistema permite la edición.")
+    @Story("ID-042 - Edición y eliminación de un tema antes de ser iniciado")
+    @DisplayName("ID-042 - Edición y eliminación de un tema antes de ser iniciado")
+    @Description("Verificar que el sistema permite editar las consignas de un tema dentro de su pestaña expansible y eliminar un tema antes de que un alumno lo haya iniciado.")
     @Severity(SeverityLevel.CRITICAL)
-    void testID025_EdicionPermitidaExamenNoIniciado() {
-        String tituloOriginal = "Parcial Edicion ID-025 " + System.currentTimeMillis();
-        String tituloModificado = tituloOriginal + " - Modificado";
+    void testID042_EdicionYEliminacionDeTemaAntesDeSerIniciado() {
+        String tituloOriginal = "Parcial Edicion ID-042 " + System.currentTimeMillis();
+        String consignaEditada = "Consigna actualizada de Tema 1 antes del inicio.";
 
-        // 1. Crear un examen que queda en estado borrador (no iniciado por alumnos)
-        page.locator("label:has-text('Clase') select").selectOption("matematicas");
-        page.locator("label:has-text('Título') input").fill(tituloOriginal);
-        page.locator("label:has-text('Tema') select").selectOption("Tema 1");
-        page.locator("label:has-text('Duración') input[type='number']").fill("60");
-        page.locator("label:has-text('Turno') select").selectOption("tarde");
-        page.locator("input[type='date']").fill("2026-10-22");
-        page.locator("input[type='time']").fill("13:30");
-        page.locator("textarea[placeholder*='consigna'], textarea").first().fill("Consigna inicial para prueba de edición de examen.");
-        page.locator("button[type='submit']:has-text('Crear')").click();
-        page.waitForURL(url -> url.matches(".*/documentos/[a-zA-Z0-9-]+$"));
+        // 1. Crear un examen que queda en estado no iniciado
+        ExamFormHelper.completarCamposBase(page, tituloOriginal, "Tema 1", "60", "Consigna inicial para prueba de edición.");
+        ExamFormHelper.guardarFormularioNuevoExamen(page);
 
-        // 2. Acceder a la edición del examen
+        // 2. Acceder a la vista de edición del examen no iniciado
         Locator btnEditar = page.locator("a:has-text('Editar'), button:has-text('Editar')").first();
-        assertTrue(btnEditar.isVisible(), "No se encontró el botón o enlace 'Editar' en el examen no iniciado.");
-        btnEditar.click();
-        page.waitForURL(url -> url.contains("/editar"));
+        btnEditar.waitFor();
+        assertTrue(btnEditar.isVisible(), "No se encontró el botón 'Editar' en el examen no iniciado.");
+        ExamFormHelper.abrirEdicionExamen(page);
 
-        // 3. Editar un campo válido del examen (Título y Duración)
-        Locator inputTitulo = page.locator("label:has-text('Título') input, input[name='titulo']").first();
-        inputTitulo.fill(tituloModificado);
+        // 3. Editar la consigna del tema (y verificar si existen pestañas expansibles de temas para eliminar un tema secundario)
+        Locator consignaInput = page.locator("textarea[placeholder*='consigna']").first();
+        assertTrue(consignaInput.isVisible() && !consignaInput.isDisabled(),
+                "La consigna del tema no está habilitada para edición antes de iniciar el examen.");
+        consignaInput.fill(consignaEditada);
 
-        Locator inputDuracion = page.locator("label:has-text('Duración') input[type='number']").first();
-        if (inputDuracion.isVisible()) {
-            inputDuracion.fill("90");
-        }
+        // Guardar la edición de la consigna
+        ExamFormHelper.guardarCambiosEdicionExamen(page);
 
-        // 4. Guardar cambios
-        page.locator("button[type='submit']:has-text('Guardar cambios'), button:has-text('Guardar')").first().click();
-        page.waitForURL(url -> !url.endsWith("/editar"));
+        Locator promptActualizado = page.locator(".block-prompt:has-text('" + consignaEditada + "')").first();
+        promptActualizado.waitFor(new Locator.WaitForOptions().setTimeout(5000));
+        assertTrue(promptActualizado.isVisible(),
+                "El sistema no reflejó la edición de la consigna del tema antes de ser iniciado.");
 
-        // 5. Asertar que el sistema permite la edición y refleja los cambios
-        boolean edicionReflejada = page.locator("text='" + tituloModificado + "'").isVisible() ||
-                page.locator("h1:has-text('" + tituloModificado + "')").isVisible() ||
-                page.locator("text='90 min'").isVisible() ||
-                page.locator("text='90'").isVisible();
+        // 4. Eliminar el examen/tema no iniciado y comprobar su eliminación exitosa
+        Locator btnEliminar = page.locator("button.danger:has-text('Eliminar')").first();
+        assertTrue(btnEliminar.isVisible() && !btnEliminar.isDisabled(),
+                "El botón 'Eliminar' no está disponible antes de que el examen sea iniciado.");
 
-        assertTrue(edicionReflejada, "El sistema no reflejó los cambios editados del examen tras guardar.");
+        page.onceDialog(dialog -> dialog.accept());
+        Response deleteResp = page.waitForResponse(
+                r -> r.url().contains("/api/documentos/") && r.request().method().equalsIgnoreCase("DELETE"),
+                btnEliminar::click
+        );
+        assertTrue(deleteResp.ok(), "El sistema no permitió eliminar el tema/examen antes de ser iniciado. HTTP " + deleteResp.status());
     }
 
     @Test
     @Tag("lote-temas-examen")
-    @Story("ID-026 - Edición bloqueada en examen iniciado por un alumno")
-    @DisplayName("ID-026 - Edición bloqueada en examen iniciado por un alumno")
-    @Description("Navega a un examen que ya tiene estado 'iniciado' por un alumno. Intenta acceder a la edición. Aserta que el sistema rechaza la solicitud indicando que el examen ya está en curso.")
+    @Story("ID-043 - Edición y eliminación de un tema después de ser iniciado")
+    @DisplayName("ID-043 - Edición y eliminación de un tema después de ser iniciado")
+    @Description("Verificar que el sistema no permite editar o eliminar el tema ni sus consignas una vez que algún alumno ha iniciado el examen.")
     @Severity(SeverityLevel.BLOCKER)
-    void testID026_EdicionBloqueadaExamenIniciado() {
-        String tituloExamen = "Parcial Iniciado Protegido ID-026 " + System.currentTimeMillis();
+    void testID043_EdicionYEliminacionDeTemaDespuesDeSerIniciado() {
+        String tituloExamen = "Parcial Iniciado Protegido ID-043 " + System.currentTimeMillis();
 
         // 1. Crear examen como Profesor
-        page.locator("label:has-text('Clase') select").selectOption("matematicas");
-        page.locator("label:has-text('Título') input").fill(tituloExamen);
-        page.locator("label:has-text('Tema') select").selectOption("Tema 1");
-        page.locator("label:has-text('Duración') input[type='number']").fill("60");
-        page.locator("label:has-text('Turno') select").selectOption("tarde");
-        page.locator("input[type='date']").fill("2026-10-22");
-        page.locator("input[type='time']").fill("13:30");
-        page.locator("textarea[placeholder*='consigna'], textarea").first().fill("Consigna para examen en curso.");
-        page.locator("button[type='submit']:has-text('Crear')").click();
-        page.waitForURL(url -> url.matches(".*/documentos/[a-zA-Z0-9-]+$"));
-        String docUrl = page.url();
+        ExamFormHelper.completarCamposBase(page, tituloExamen, "Tema 1", "60", "Consigna protegida para examen iniciado.");
+        String docUrl = ExamFormHelper.guardarFormularioNuevoExamen(page);
 
-        // 2. Publicar el examen
-        Locator btnPublicar = page.locator("button:has-text('Publicar')");
-        if (btnPublicar.count() > 0 && btnPublicar.first().isVisible()) {
-            page.onceDialog(dialog -> dialog.accept());
-            btnPublicar.first().click();
-            page.waitForTimeout(500);
-        }
+        // 2. Activar y publicar el examen ("Tomar ahora") y adelantar hora simulada
+        ExamFormHelper.tomarExamenAhora(page);
+        ClockMockHelper.setSimTime(page, "2028-03-15T13:35:00");
+        ClockMockHelper.clearSimTime(page);
 
-        // 3. Simular inicio por parte del alumno
-        // Cerrar sesión profesor
-        page.locator("button:has-text('Cerrar sesión')").first().click();
-        page.waitForURL(url -> url.endsWith("/login"));
+        // 3. Contexto secundario del Alumno: abrir e iniciar efectivamente el examen en Modo Restringido
+        BrowserContext contextAlumno = crearContextoSecundario("alumno");
+        Page pageAlumno = contextAlumno.newPage();
+        ClockMockHelper.instalarRelojSimulado(pageAlumno);
+        AuthHelper.loginAlumno(pageAlumno, baseUrl);
 
-        // Iniciar sesión como alumno
-        page.locator("label:has-text('Usuario o mail') input, input:not([type='password'])").first().fill("alumno1");
-        page.locator("input[type='password']").fill("rendix123");
-        page.locator("button[type='submit'], button:has-text('Ingresar')").click();
-        page.waitForURL(url -> !url.endsWith("/login"));
+        pageAlumno.navigate(baseUrl + "/alumno/parciales");
+        pageAlumno.locator("h1:has-text('Parciales')").waitFor();
 
-        // Acceder a parciales del alumno e iniciar el examen si la interfaz lo permite
-        page.navigate("https://rendix.vercel.app/alumno/parciales");
-        page.waitForTimeout(500);
-        Locator btnRendir = page.locator("a:has-text('Rendir'), button:has-text('Rendir'), button:has-text('Comenzar'), button:has-text('Iniciar')");
-        if (btnRendir.count() > 0 && btnRendir.first().isVisible()) {
-            btnRendir.first().click();
-            page.waitForTimeout(1000);
-        }
+        Locator cardExamen = pageAlumno.locator("li.student-exam:has-text('" + tituloExamen + "')").first();
+        cardExamen.waitFor();
+        cardExamen.locator("a.button").first().click();
 
-        // 4. Volver a iniciar sesión como Profesor
-        Locator logoutAlumno = page.locator("button:has-text('Cerrar sesión')");
-        if (logoutAlumno.count() > 0 && logoutAlumno.first().isVisible()) {
-            logoutAlumno.first().click();
-            page.waitForURL(url -> url.endsWith("/login"));
-        } else {
-            page.navigate("https://rendix.vercel.app/login");
-        }
-        page.locator("label:has-text('Usuario o mail') input, input:not([type='password'])").first().fill("profesor1");
-        page.locator("input[type='password']").fill("rendix123");
-        page.locator("button[type='submit'], button:has-text('Ingresar')").click();
-        page.waitForURL(url -> !url.endsWith("/login"));
+        // Aceptar reglas del modo restringido e ingresar al examen
+        Locator checkReglas = pageAlumno.locator("label.restricted-accept input[type='checkbox']");
+        checkReglas.waitFor();
+        checkReglas.check();
 
-        // 5. Navegar al examen ya publicado/iniciado
-        page.navigate(docUrl);
-        page.waitForSelector(".container, .documento-view, main");
+        Response respComenzar = pageAlumno.waitForResponse(
+                r -> r.url().contains("/comenzar") && r.request().method().equalsIgnoreCase("POST"),
+                () -> pageAlumno.locator("button:has-text('Ingresar al examen')").click()
+        );
 
-        // 6. Intentar acceder a la edición
-        Locator btnEditar = page.locator("a:has-text('Editar'), button:has-text('Editar')");
-        boolean btnEditarAusenteODeshabilitado = btnEditar.count() == 0 ||
-                !btnEditar.first().isVisible() ||
-                btnEditar.first().getAttribute("disabled") != null;
+        // Aserción obligatoria: confirmar que el alumno efectivamente inició el examen
+        assertTrue(respComenzar.ok(),
+                "El alumno no pudo iniciar el examen (falló POST /comenzar con HTTP " + respComenzar.status() + ").");
+        pageAlumno.locator(".exam-content").first().waitFor();
+        assertTrue(pageAlumno.locator(".exam-content").isVisible(),
+                "El alumno no ingresó a la vista activa de resolución del examen (.exam-content).");
 
-        // Intentar ingresar directamente por URL a /editar
+        // 4. Como Profesor, recargar datos y acceder a la vista de edición (/documentos/:id/editar)
         page.navigate(docUrl + "/editar");
-        page.waitForTimeout(1000);
+        page.locator("form").first().waitFor();
 
-        Locator errorMsg = page.locator("p.error, .notice, .alert, .field-error, .toast");
-        String mensajeRechazo = errorMsg.count() > 0 && errorMsg.first().isVisible() ? errorMsg.first().innerText().toLowerCase() : "";
+        // 5. Validar que el selector de Tema esté deshabilitado, las consignas no sean editables ni eliminables y se muestre el aviso
+        Locator selectorTema = page.locator("label:has-text('Tema') select").first();
+        Locator avisoBloqueo = page.locator("p.notice:has-text('un alumno ya empezó el parcial')");
+        Locator consignasEditables = page.locator(".blocks textarea");
+        Locator botonesEliminarConsigna = page.locator(".blocks button:has-text('Eliminar')");
 
-        boolean navegacionRechazada = !page.url().endsWith("/editar") ||
-                mensajeRechazo.contains("en curso") ||
-                mensajeRechazo.contains("iniciado") ||
-                mensajeRechazo.contains("no se puede editar") ||
-                mensajeRechazo.contains("bloquead");
-
-        assertTrue(btnEditarAusenteODeshabilitado || navegacionRechazada,
-                "El sistema no rechazó la edición ni indicó que el examen ya está en curso tras haber sido iniciado. Mensaje: " + mensajeRechazo);
+        assertTrue(selectorTema.isDisabled(),
+                "El selector de Tema sigue habilitado después de que un alumno inició el examen.");
+        assertTrue(avisoBloqueo.isVisible(),
+                "No se mostró el aviso de bloqueo de edición indicando que un alumno ya empezó el parcial.");
+        assertEquals(0, consignasEditables.count(),
+                "Las consignas siguen siendo editables después de que un alumno inició el examen.");
+        assertEquals(0, botonesEliminarConsigna.count(),
+                "Los botones para eliminar consignas siguen presentes después de que un alumno inició el examen.");
     }
 }

@@ -1,5 +1,11 @@
 base\TestBase.class
+helpers\TeacherMonitorHelper.class
+lotes\EnvioExamenTest.class
+helpers\AuthHelper.class
+lotes\ControlAccesoTest.class
+helpers\AuthHelper$UsuarioTemporal.class
+helpers\ClockMockHelper.class
+lotes\GeoGebraTest.class
+helpers\StudentExamHelper.class
+helpers\ExamFormHelper.class
 lotes\CrearExamenTest.class
-lotes\GestionTemasExamenTest.class
-lotes\ValidacionesExamenTest.class
-lotes\LoginTest.class

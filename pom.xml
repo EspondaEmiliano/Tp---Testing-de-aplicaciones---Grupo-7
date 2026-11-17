@@ -17,6 +17,7 @@
         <allure.version>2.27.0</allure.version>
         <aspectj.version>1.9.25.1</aspectj.version>
         <allure.maven.version>2.15.2</allure.maven.version>
+        <testFailureIgnore>false</testFailureIgnore>
     </properties>
 
     <dependencies>
@@ -60,7 +61,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
                 <configuration>
-                    <testFailureIgnore>true</testFailureIgnore>
+                    <testFailureIgnore>${testFailureIgnore}</testFailureIgnore>
                     <argLine>
                         -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"
                     </argLine>

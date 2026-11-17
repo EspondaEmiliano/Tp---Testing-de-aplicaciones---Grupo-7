@@ -3,18 +3,44 @@ GUÍA DE COMANDOS DE EJECUCIÓN - SUITE DE AUTOMATIZACIÓN RENDIX
 ================================================================================
 
 Este documento contiene todos los comandos necesarios para ejecutar la suite de 
-pruebas automatizadas con Maven y Playwright, desglosados por lote y por caso 
-individual.
+pruebas automatizadas con Maven y Playwright, alineados estrictamente con la 
+matriz oficial de casos de prueba (ID-001 al ID-093, excluyendo ID-075).
 
-> NOTA SOBRE MAVEN WRAPPER EN WINDOWS:
+> NOTA SOBRE MAVEN WRAPPER Y PROPIEDADES EN WINDOWS:
   - Puedes usar 'mvn' si tienes Maven en el PATH, o '.\mvnw.cmd' utilizando el 
     wrapper incluido en la raíz del proyecto.
-  - Para ejecutar Chromium en segundo plano (sin abrir la ventana gráfica del 
-    navegador), agrega el parámetro '-Dheadless=true' al final de cualquier comando.
-    Ejemplo: .\mvnw.cmd test "-Dgroups=lote-login" "-Dheadless=true"
+  - Para ejecutar en modo oculto (headless), agrega '-Dheadless=true'.
+  - Para elegir el navegador ('chrome' o 'msedge'), agrega '-DbrowserChannel=chrome'.
+  - Por defecto, 'mvn test' falla el build si algún test detecta un bug en la app
+    (testFailureIgnore=false). Para continuar hacia Allure Report ignorando fallos
+    en la consola, agrega '-DtestFailureIgnore=true'.
 
 ================================================================================
-COMANDOS GLOBALES Y REPORTES
+⚡ COMANDO RÁPIDO: LIMPIEZA TOTAL, EJECUCIÓN COMPLETA Y APERTURA DE ALLURE REPORT
+================================================================================
+Ejecuta este bloque para:
+  1. Eliminar todos los resultados, reportes previos y trazas guardadas (target/ y resultados/).
+  2. Volver a ejecutar TODOS los tests de la suite desde cero.
+  3. Levantar automáticamente el dashboard web interactivo de Allure Report en el 
+     navegador con la información exclusiva de las pruebas recién ejecutadas.
+
+--- En PowerShell (Recomendado para Windows) ---
+Remove-Item -Recurse -Force target, resultados -ErrorAction SilentlyContinue; .\mvnw.cmd clean test "-DtestFailureIgnore=true" allure:serve
+
+--- En CMD (Símbolo del sistema de Windows) ---
+if exist resultados rmdir /s /q resultados & .\mvnw.cmd clean test "-DtestFailureIgnore=true" allure:serve
+
+--- En Bash / Git Bash / macOS / Linux ---
+rm -rf target resultados && ./mvnw clean test -DtestFailureIgnore=true allure:serve
+
+--- Variante en modo Headless (navegador oculto hasta abrir Allure) ---
+PowerShell:    Remove-Item -Recurse -Force target, resultados -ErrorAction SilentlyContinue; .\mvnw.cmd clean test "-Dheadless=true" "-DtestFailureIgnore=true" allure:serve
+Maven Wrapper: .\mvnw.cmd clean test "-Dheadless=true" "-DtestFailureIgnore=true" allure:serve
+Maven:         mvn clean test -Dheadless=true -DtestFailureIgnore=true allure:serve
+
+
+================================================================================
+COMANDOS GLOBALES Y REPORTES INDIVIDUALES
 ================================================================================
 
 1. Ejecutar TODOS los tests del proyecto:
@@ -45,41 +71,41 @@ Maven Wrapper: .\mvnw.cmd test "-Dgroups=lote-login"
 
 --- Desglose por TEST INDIVIDUAL ---
 
-* ID-001 - Login Exitoso:
+* ID-001 - Login Exitoso de Profesor y Alumno:
   Maven:         mvn test -Dtest=LoginTest#testID001_LoginExitoso
   Maven Wrapper: .\mvnw.cmd test "-Dtest=LoginTest#testID001_LoginExitoso"
 
-* ID-002 - Cierre de Sesión:
+* ID-002 - Cierre de sesion:
   Maven:         mvn test -Dtest=LoginTest#testID002_CierreDeSesion
   Maven Wrapper: .\mvnw.cmd test "-Dtest=LoginTest#testID002_CierreDeSesion"
 
-* ID-003 - Usuario No Registrado:
+* ID-003 - Usuario no registrado por la institucion:
   Maven:         mvn test -Dtest=LoginTest#testID003_UsuarioNoRegistrado
   Maven Wrapper: .\mvnw.cmd test "-Dtest=LoginTest#testID003_UsuarioNoRegistrado"
 
-* ID-004 - Espacios y Mayúsculas en Usuario:
+* ID-004 - Espacios y mayusculas en el usuario:
   Maven:         mvn test -Dtest=LoginTest#testID004_EspaciosYMayusculasEnUsuario
   Maven Wrapper: .\mvnw.cmd test "-Dtest=LoginTest#testID004_EspaciosYMayusculasEnUsuario"
 
-* ID-005 - Credenciales Inválidas:
+* ID-005 - Intento de login con credenciales invalidas:
   Maven:         mvn test -Dtest=LoginTest#testID005_CredencialesInvalidas
   Maven Wrapper: .\mvnw.cmd test "-Dtest=LoginTest#testID005_CredencialesInvalidas"
 
-* ID-006 - Campos Vacíos:
+* ID-006 - Campos vacios:
   Maven:         mvn test -Dtest=LoginTest#testID006_CamposVacios
   Maven Wrapper: .\mvnw.cmd test "-Dtest=LoginTest#testID006_CamposVacios"
 
-* ID-007 - Intentos Fallidos:
+* ID-007 - Intentos fallidos repetidos:
   Maven:         mvn test -Dtest=LoginTest#testID007_IntentosFallidos
   Maven Wrapper: .\mvnw.cmd test "-Dtest=LoginTest#testID007_IntentosFallidos"
 
-* ID-008 - Contraseña Sensible a Mayúsculas:
+* ID-008 - Contraseña sensible a mayusculas:
   Maven:         mvn test -Dtest=LoginTest#testID008_ContrasenaSensibleAMayusculas
   Maven Wrapper: .\mvnw.cmd test "-Dtest=LoginTest#testID008_ContrasenaSensibleAMayusculas"
 
 
 ================================================================================
-LOTE 2: CREAR EXAMEN (Casos ID-009, ID-010 e ID-011)
+LOTE 2: CREAR EXAMEN (Casos ID-009 e ID-010)
 Clase: lotes.CrearExamenTest | Tag: lote-crear-examen
 ================================================================================
 
@@ -97,37 +123,97 @@ Maven Wrapper: .\mvnw.cmd test "-Dgroups=lote-crear-examen"
   Maven:         mvn test -Dtest=CrearExamenTest#testID010_ExamenEnBorradorNoVisibleParaAlumnos
   Maven Wrapper: .\mvnw.cmd test "-Dtest=CrearExamenTest#testID010_ExamenEnBorradorNoVisibleParaAlumnos"
 
-* ID-011 - Restricción de publicación sin requisitos mínimos:
-  Maven:         mvn test -Dtest=CrearExamenTest#testID011_RestriccionPublicacionSinRequisitosMinimos
-  Maven Wrapper: .\mvnw.cmd test "-Dtest=CrearExamenTest#testID011_RestriccionPublicacionSinRequisitosMinimos"
-
 
 ================================================================================
-LOTE 3: VALIDACIONES DE EXAMEN (Casos ID-013, ID-014 e ID-015)
-Clase: lotes.ValidacionesExamenTest | Tag: lote-validaciones-examen
+LOTE 3: GESTIÓN Y PUBLICACIÓN DE EXÁMENES (Casos ID-011 al ID-014)
+Clase: lotes.GestionPublicacionExamenesTest | Tag: lote-gestion-examenes
 ================================================================================
 
 --- Ejecución del LOTE COMPLETO ---
-Maven:         mvn test -Dgroups="lote-validaciones-examen"
-Maven Wrapper: .\mvnw.cmd test "-Dgroups=lote-validaciones-examen"
+Maven:         mvn test -Dgroups="lote-gestion-examenes"
+Maven Wrapper: .\mvnw.cmd test "-Dgroups=lote-gestion-examenes"
 
 --- Desglose por TEST INDIVIDUAL ---
 
-* ID-013 - Asignación de puntaje válido en consigna:
-  Maven:         mvn test -Dtest=ValidacionesExamenTest#testID013_AsignacionPuntajeValidoEnConsigna
-  Maven Wrapper: .\mvnw.cmd test "-Dtest=ValidacionesExamenTest#testID013_AsignacionPuntajeValidoEnConsigna"
+* ID-011 - Transición de Borrador a Publicado y visibilidad de alumno:
+  Maven:         mvn test -Dtest=GestionPublicacionExamenesTest#testID011_TransicionDeBorradorAPublicadoYVisibilidadDeAlumno
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionPublicacionExamenesTest#testID011_TransicionDeBorradorAPublicadoYVisibilidadDeAlumno"
 
-* ID-014 - Validación de puntaje fuera de rango o inválido:
-  Maven:         mvn test -Dtest=ValidacionesExamenTest#testID014_ValidacionPuntajeFueraDeRangoOInvalido
-  Maven Wrapper: .\mvnw.cmd test "-Dtest=ValidacionesExamenTest#testID014_ValidacionPuntajeFueraDeRangoOInvalido"
+* ID-012 - Restricción de publicación sin requisitos mínimos:
+  Maven:         mvn test -Dtest=GestionPublicacionExamenesTest#testID012_RestriccionDePublicacionSinRequisitosMinimos
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionPublicacionExamenesTest#testID012_RestriccionDePublicacionSinRequisitosMinimos"
 
-* ID-015 - Validación del campo tiempo límite - Rango y Formato:
-  Maven:         mvn test -Dtest=ValidacionesExamenTest#testID015_ValidacionCampoTiempoLimite
-  Maven Wrapper: .\mvnw.cmd test "-Dtest=ValidacionesExamenTest#testID015_ValidacionCampoTiempoLimite"
+* ID-013 - Validación de campos obligatorios para el guardado:
+  Maven:         mvn test -Dtest=GestionPublicacionExamenesTest#testID013_ValidacionDeCamposObligatoriosParaElGuardado
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionPublicacionExamenesTest#testID013_ValidacionDeCamposObligatoriosParaElGuardado"
+
+* ID-014 - Configuración y selección de herramientas de trabajo:
+  Maven:         mvn test -Dtest=GestionPublicacionExamenesTest#testID014_ConfiguracionYSeleccionDeHerramientasDeTrabajo
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionPublicacionExamenesTest#testID014_ConfiguracionYSeleccionDeHerramientasDeTrabajo"
 
 
 ================================================================================
-LOTE 4: GESTIÓN DE TEMAS Y PUNTAJES (Casos ID-019 al ID-026)
+LOTE 4: VALIDACIONES NUMÉRICAS Y TIEMPOS (Casos ID-016 al ID-020)
+Clase: lotes.ValidacionesNumericasTest | Tag: lote-validaciones-numericas
+================================================================================
+
+--- Ejecución del LOTE COMPLETO ---
+Maven:         mvn test -Dgroups="lote-validaciones-numericas"
+Maven Wrapper: .\mvnw.cmd test "-Dgroups=lote-validaciones-numericas"
+
+--- Desglose por TEST INDIVIDUAL ---
+
+* ID-016 - Asignación de puntaje válido en consigna:
+  Maven:         mvn test -Dtest=ValidacionesNumericasTest#testID016_AsignacionPuntajeValidoEnConsigna
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ValidacionesNumericasTest#testID016_AsignacionPuntajeValidoEnConsigna"
+
+* ID-017 - Validación de puntaje fuera de rango o inválido:
+  Maven:         mvn test -Dtest=ValidacionesNumericasTest#testID017_ValidacionPuntajeFueraDeRangoOInvalido
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ValidacionesNumericasTest#testID017_ValidacionPuntajeFueraDeRangoOInvalido"
+
+* ID-018 - Definición válida del tiempo límite:
+  Maven:         mvn test -Dtest=ValidacionesNumericasTest#testID018_DefinicionValidaDelTiempoLimite
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ValidacionesNumericasTest#testID018_DefinicionValidaDelTiempoLimite"
+
+* ID-019 - Validación del campo tiempo límite (Rango y Formato):
+  Maven:         mvn test -Dtest=ValidacionesNumericasTest#testID019_ValidacionCampoTiempoLimiteRangoYFormato
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ValidacionesNumericasTest#testID019_ValidacionCampoTiempoLimiteRangoYFormato"
+
+* ID-020 - Modificación del tiempo límite según estado del examen:
+  Maven:         mvn test -Dtest=ValidacionesNumericasTest#testID020_ModificacionDelTiempoLimiteSegunEstadoDelExamen
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ValidacionesNumericasTest#testID020_ModificacionDelTiempoLimiteSegunEstadoDelExamen"
+
+
+================================================================================
+LOTE 5: REGISTRO DE USUARIOS (Casos ID-032 al ID-035)
+Clase: lotes.RegistroUsuariosTest | Tag: lote-registro-usuarios
+================================================================================
+
+--- Ejecución del LOTE COMPLETO ---
+Maven:         mvn test -Dgroups="lote-registro-usuarios"
+Maven Wrapper: .\mvnw.cmd test "-Dgroups=lote-registro-usuarios"
+
+--- Desglose por TEST INDIVIDUAL ---
+
+* ID-032 - Registro exitoso de nueva cuenta de alumno (Happy Path):
+  Maven:         mvn test -Dtest=RegistroUsuariosTest#testID032_RegistroExitosoDeNuevaCuentaAlumnoHappyPath
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=RegistroUsuariosTest#testID032_RegistroExitosoDeNuevaCuentaAlumnoHappyPath"
+
+* ID-033 - Validación de campos obligatorios en el registro:
+  Maven:         mvn test -Dtest=RegistroUsuariosTest#testID033_ValidacionCamposObligatoriosEnElRegistro
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=RegistroUsuariosTest#testID033_ValidacionCamposObligatoriosEnElRegistro"
+
+* ID-034 - Validación de formato de email y duplicidad:
+  Maven:         mvn test -Dtest=RegistroUsuariosTest#testID034_ValidacionFormatoDeEmailYDuplicidad
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=RegistroUsuariosTest#testID034_ValidacionFormatoDeEmailYDuplicidad"
+
+* ID-035 - Validación de longitud mínima de contraseña (8 caracteres):
+  Maven:         mvn test -Dtest=RegistroUsuariosTest#testID035_ValidacionLongitudMinimaDeContrasena
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=RegistroUsuariosTest#testID035_ValidacionLongitudMinimaDeContrasena"
+
+
+================================================================================
+LOTE 6: GESTIÓN DE TEMAS Y PUNTAJES (Casos ID-036 al ID-043)
 Clase: lotes.GestionTemasExamenTest | Tag: lote-temas-examen
 ================================================================================
 
@@ -137,36 +223,381 @@ Maven Wrapper: .\mvnw.cmd test "-Dgroups=lote-temas-examen"
 
 --- Desglose por TEST INDIVIDUAL ---
 
-* ID-019 - Creación de examen con múltiples temas simétricos en puntaje:
-  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID019_CrearExamenConMultiplesTemasSimetricos
-  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID019_CrearExamenConMultiplesTemasSimetricos"
+* ID-036 - Creación exitosa de múltiples temas para un parcial:
+  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID036_CreacionExitosaDeMultiplesTemasParaUnParcial
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID036_CreacionExitosaDeMultiplesTemasParaUnParcial"
 
-* ID-020 - Restricción de temas con nombres repetidos:
-  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID020_TemasConNombreRepetido
-  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID020_TemasConNombreRepetido"
+* ID-037 - Validación de unicidad de nombre de tema por parcial:
+  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID037_ValidacionDeUnicidadDeNombreDeTemaPorParcial
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID037_ValidacionDeUnicidadDeNombreDeTemaPorParcial"
 
-* ID-021 - Examen con campo de tema vacío:
-  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID021_ExamenConCampoDeTemaVacio
-  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID021_ExamenConCampoDeTemaVacio"
+* ID-038 - Creación de temas mediante pestañas expansibles (hasta 3):
+  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID038_CreacionDeTemasMediantePestanasExpansibles
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID038_CreacionDeTemasMediantePestanasExpansibles"
 
-* ID-022 - Examen con consignas con puntaje total menor a 0:
-  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID022_ConsignasConPuntajeTotalMenorACero
-  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID022_ConsignasConPuntajeTotalMenorACero"
+* ID-039 - Examen con consignas con puntaje sumado =-1:
+  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID039_ExamenConConsignasConPuntajeSumadoNegativo
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID039_ExamenConConsignasConPuntajeSumadoNegativo"
 
-* ID-023 - Examen con consignas con puntaje total mayor a 10:
-  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID023_ConsignasConPuntajeTotalMayorADiez
-  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID023_ConsignasConPuntajeTotalMayorADiez"
+* ID-040 - Examen con consignas con puntaje sumado =11:
+  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID040_ExamenConConsignasConPuntajeSumadoMayorADiez
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID040_ExamenConConsignasConPuntajeSumadoMayorADiez"
 
-* ID-024 - Bloqueo de creación por disparidad en el puntaje total entre temas:
-  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID024_DisparidadPuntajeEntreTemas
-  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID024_DisparidadPuntajeEntreTemas"
+* ID-041 - Examen con temas con puntaje distinto:
+  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID041_ExamenConTemasConPuntajeDistinto
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID041_ExamenConTemasConPuntajeDistinto"
 
-* ID-025 - Edición permitida en examen no iniciado:
-  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID025_EdicionPermitidaExamenNoIniciado
-  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID025_EdicionPermitidaExamenNoIniciado"
+* ID-042 - Edición y eliminación de un tema antes de ser iniciado:
+  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID042_EdicionYEliminacionDeTemaAntesDeSerIniciado
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID042_EdicionYEliminacionDeTemaAntesDeSerIniciado"
 
-* ID-026 - Edición bloqueada en examen iniciado por un alumno:
-  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID026_EdicionBloqueadaExamenIniciado
-  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID026_EdicionBloqueadaExamenIniciado"
+* ID-043 - Edición y eliminación de un tema después de ser iniciado:
+  Maven:         mvn test -Dtest=GestionTemasExamenTest#testID043_EdicionYEliminacionDeTemaDespuesDeSerIniciado
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testID043_EdicionYEliminacionDeTemaDespuesDeSerIniciado"
+
+* Auxiliar - Examen con campo de tema vacío (Tag: auxiliar):
+  Maven:         mvn test -Dtest=GestionTemasExamenTest#testValidacionCampoDeTemaVacio
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionTemasExamenTest#testValidacionCampoDeTemaVacio"
+
+
+================================================================================
+LOTE 7: CONTROL DE ACCESO Y VENTANA HORARIA (Casos ID-015 e ID-055)
+Clase: lotes.ControlAccesoTest | Tag: lote-control-acceso
+================================================================================
+
+--- Ejecución del LOTE COMPLETO ---
+Maven:         mvn test -Dgroups="lote-control-acceso"
+Maven Wrapper: .\mvnw.cmd test "-Dgroups=lote-control-acceso"
+
+--- Desglose por TEST INDIVIDUAL ---
+
+* ID-015 - Restricción de acceso por URL directa para usuarios no autorizados:
+  Maven:         mvn test -Dtest=ControlAccesoTest#testID015_RestriccionDeAccesoPorUrlDirectaUsuariosNoAutorizados
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ControlAccesoTest#testID015_RestriccionDeAccesoPorUrlDirectaUsuariosNoAutorizados"
+
+* ID-055 - Bloqueo de apertura de examen fuera del horario de turno (antes y después):
+  Maven:         mvn test -Dtest=ControlAccesoTest#testID055_BloqueoDeAperturaDeExamenFueraDelHorarioDeTurno
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ControlAccesoTest#testID055_BloqueoDeAperturaDeExamenFueraDelHorarioDeTurno"
+
+
+================================================================================
+LOTE 8: RESOLUCIÓN DE EXAMEN Y CALCULADORA (Casos ID-054, ID-021, ID-022 e ID-023)
+Clase: lotes.ResolucionExamenTest | Tag: lote-resolucion-examen
+================================================================================
+
+--- Ejecución del LOTE COMPLETO ---
+Maven:         mvn test -Dgroups="lote-resolucion-examen"
+Maven Wrapper: .\mvnw.cmd test "-Dgroups=lote-resolucion-examen"
+
+--- Desglose por TEST INDIVIDUAL ---
+
+* ID-054 - Apertura exitosa de examen dentro del horario de turno e inmutabilidad de 1ra apertura:
+  Maven:         mvn test -Dtest=ResolucionExamenTest#testID054_AperturaExitosaDeExamenDentroDelHorarioDeTurno
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ResolucionExamenTest#testID054_AperturaExitosaDeExamenDentroDelHorarioDeTurno"
+
+* ID-021 - Redacción de respuestas con texto, números y símbolos matemáticos:
+  Maven:         mvn test -Dtest=ResolucionExamenTest#testID021_RedaccionDeRespuestasConTextoNumerosYSimbolosMatematicos
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ResolucionExamenTest#testID021_RedaccionDeRespuestasConTextoNumerosYSimbolosMatematicos"
+
+* ID-022 - Visibilidad condicional de la herramienta Calculadora según configuración:
+  Maven:         mvn test -Dtest=ResolucionExamenTest#testID022_VisibilidadCondicionalDeHerramientaCalculadoraSegunConfiguracion
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ResolucionExamenTest#testID022_VisibilidadCondicionalDeHerramientaCalculadoraSegunConfiguracion"
+
+* ID-023 - Operaciones básicas y funciones científicas en la calculadora integrada:
+  Maven:         mvn test -Dtest=ResolucionExamenTest#testID023_OperacionesBasicasYCientificasEnCalculadoraIntegrada
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ResolucionExamenTest#testID023_OperacionesBasicasYCientificasEnCalculadoraIntegrada"
+
+
+================================================================================
+LOTE 9: ENVÍO Y CIERRE DE EXAMEN (Casos ID-026, ID-058, ID-027, ID-028, ID-056, ID-029 e ID-059)
+Clase: lotes.EnvioExamenTest | Tag: lote-envio-examen
+================================================================================
+
+--- Ejecución del LOTE COMPLETO ---
+Maven:         mvn test -Dgroups="lote-envio-examen"
+Maven Wrapper: .\mvnw.cmd test "-Dgroups=lote-envio-examen"
+
+--- Desglose por TEST INDIVIDUAL ---
+
+* ID-026 - Envío exitoso de un examen completo (Happy Path):
+  Maven:         mvn test -Dtest=EnvioExamenTest#testID026_EnvioExitosoDeExamenCompletoHappyPath
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=EnvioExamenTest#testID026_EnvioExitosoDeExamenCompletoHappyPath"
+
+* ID-058 - Visualización del modal de confirmación antes de enviar el examen:
+  Maven:         mvn test -Dtest=EnvioExamenTest#testID058_VisualizacionDelModalDeConfirmacionAntesDeEnviar
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=EnvioExamenTest#testID058_VisualizacionDelModalDeConfirmacionAntesDeEnviar"
+
+* ID-027 - Cancelación del envío en el modal y retorno a la edición:
+  Maven:         mvn test -Dtest=EnvioExamenTest#testID027_CancelacionDelEnvioEnElModalYRetornoALaEdicion
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=EnvioExamenTest#testID027_CancelacionDelEnvioEnElModalYRetornoALaEdicion"
+
+* ID-028 / ID-056 - Bloqueo de modificación o reenvío posentrega y modo solo lectura:
+  Maven:         mvn test -Dtest=EnvioExamenTest#testID028_ID056_BloqueoDeModificacionOReenvioPosentregaYModoLectura
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=EnvioExamenTest#testID028_ID056_BloqueoDeModificacionOReenvioPosentregaYModoLectura"
+
+* ID-029 / ID-059 - Advertencia por consignas vacías o examen en blanco y envío confirmado:
+  Maven:         mvn test -Dtest=EnvioExamenTest#testID029_ID059_AdvertenciaPorConsignasEnBlancoYEnvioConfirmado
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=EnvioExamenTest#testID029_ID059_AdvertenciaPorConsignasEnBlancoYEnvioConfirmado"
+
+
+================================================================================
+LOTE 10: RESILIENCIA, AUTOGUARDADO Y TEMPORIZADOR (Casos ID-057 y ID-063 al ID-071)
+Clase: lotes.ResilienciaTemporizadorTest | Tag: lote-resiliencia-temporizador
+================================================================================
+
+--- Ejecución del LOTE COMPLETO ---
+Maven:         mvn test -Dgroups="lote-resiliencia-temporizador"
+Maven Wrapper: .\mvnw.cmd test "-Dgroups=lote-resiliencia-temporizador"
+
+--- Desglose por TEST INDIVIDUAL ---
+
+* ID-066 - Autoguardado continuo en tiempo real con conexión activa (< 1s):
+  Maven:         mvn test -Dtest=ResilienciaTemporizadorTest#testID066_AutoguardadoContinuoEnTiempoRealConConexionActiva
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ResilienciaTemporizadorTest#testID066_AutoguardadoContinuoEnTiempoRealConConexionActiva"
+
+* ID-057 - Guardado automático de respuestas parciales (3 de 5):
+  Maven:         mvn test -Dtest=ResilienciaTemporizadorTest#testID057_GuardadoAutomaticoDeRespuestasParciales
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ResilienciaTemporizadorTest#testID057_GuardadoAutomaticoDeRespuestasParciales"
+
+* ID-067 - Persistencia local en caché ante caída de conexión (Modo Offline):
+  Maven:         mvn test -Dtest=ResilienciaTemporizadorTest#testID067_PersistenciaLocalEnCacheAnteCaidaDeConexion
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ResilienciaTemporizadorTest#testID067_PersistenciaLocalEnCacheAnteCaidaDeConexion"
+
+* ID-068 - Resincronización automática tras recuperar conexión (Reconexión):
+  Maven:         mvn test -Dtest=ResilienciaTemporizadorTest#testID068_ResincronizacionAutomaticaTrasRecuperarConexion
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ResilienciaTemporizadorTest#testID068_ResincronizacionAutomaticaTrasRecuperarConexion"
+
+* ID-069 - Recuperación de sesión y respuestas tras cierre abrupto del navegador:
+  Maven:         mvn test -Dtest=ResilienciaTemporizadorTest#testID069_RecuperacionDeSesionYRespuestasTrasCierreAbruptoDelNavegador
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ResilienciaTemporizadorTest#testID069_RecuperacionDeSesionYRespuestasTrasCierreAbruptoDelNavegador"
+
+* ID-063 - Visualización continua del temporizador en formato HH:MM:SS:
+  Maven:         mvn test -Dtest=ResilienciaTemporizadorTest#testID063_VisualizacionContinuaDelTemporizadorEnFormatoHHMMSS
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ResilienciaTemporizadorTest#testID063_VisualizacionContinuaDelTemporizadorEnFormatoHHMMSS"
+
+* ID-064 - Sincronización del temporizador con el reloj del servidor (Anti-tampering):
+  Maven:         mvn test -Dtest=ResilienciaTemporizadorTest#testID064_SincronizacionDelTemporizadorConRelojDelServidorAntiTampering
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ResilienciaTemporizadorTest#testID064_SincronizacionDelTemporizadorConRelojDelServidorAntiTampering"
+
+* ID-065 - Alertas visuales progresivas de tiempo restante (10 min, 5 min y 1 min):
+  Maven:         mvn test -Dtest=ResilienciaTemporizadorTest#testID065_AlertasVisualesProgresivasDeTiempoRestante
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ResilienciaTemporizadorTest#testID065_AlertasVisualesProgresivasDeTiempoRestante"
+
+* ID-070 - Autocierre y envío automático al agotarse el tiempo (Time Out Online):
+  Maven:         mvn test -Dtest=ResilienciaTemporizadorTest#testID070_AutocierreYEnvioAutomaticoAlAgotarseElTiempoOnline
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ResilienciaTemporizadorTest#testID070_AutocierreYEnvioAutomaticoAlAgotarseElTiempoOnline"
+
+* ID-071 - Vencimiento del tiempo límite mientras el alumno está Offline:
+  Maven:         mvn test -Dtest=ResilienciaTemporizadorTest#testID071_VencimientoDelTiempoLimiteMientrasElAlumnoEstaOffline
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ResilienciaTemporizadorTest#testID071_VencimientoDelTiempoLimiteMientrasElAlumnoEstaOffline"
+
+
+================================================================================
+LOTE 11: MODO RESTRINGIDO Y SEGURIDAD (Casos ID-076 al ID-087 e ID-093)
+Clase: lotes.ModoRestringidoTest | Tag: lote-modo-restringido
+================================================================================
+
+--- Ejecución del LOTE COMPLETO ---
+Maven:         mvn test -Dgroups="lote-modo-restringido"
+Maven Wrapper: .\mvnw.cmd test "-Dgroups=lote-modo-restringido"
+
+--- Desglose por TEST INDIVIDUAL ---
+
+* ID-076 - Pantalla informativa previa y aceptación obligatoria del modo restringido:
+  Maven:         mvn test -Dtest=ModoRestringidoTest#testID076_PantallaInformativaPreviaYAceptacionObligatoriaDelModoRestringido
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ModoRestringidoTest#testID076_PantallaInformativaPreviaYAceptacionObligatoriaDelModoRestringido"
+
+* ID-077 - Bloqueo de inicio si el navegador no soporta o rechaza pantalla completa:
+  Maven:         mvn test -Dtest=ModoRestringidoTest#testID077_BloqueoDeInicioSiElNavegadorNoSoportaORechazaPantallaCompleta
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ModoRestringidoTest#testID077_BloqueoDeInicioSiElNavegadorNoSoportaORechazaPantallaCompleta"
+
+* ID-078 - Ocultamiento de navegación general y presencia exclusiva del botón SALIR:
+  Maven:         mvn test -Dtest=ModoRestringidoTest#testID078_OcultamientoDeNavegacionGeneralYPresenciaExclusivaDelBotonSalir
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ModoRestringidoTest#testID078_OcultamientoDeNavegacionGeneralYPresenciaExclusivaDelBotonSalir"
+
+* ID-079 - Detección de salida de pantalla completa como Incidente y bloqueo inmediato:
+  Maven:         mvn test -Dtest=ModoRestringidoTest#testID079_DeteccionDeSalidaDePantallaCompletaComoIncidenteYBloqueoInmediato
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ModoRestringidoTest#testID079_DeteccionDeSalidaDePantallaCompletaComoIncidenteYBloqueoInmediato"
+
+* ID-080 - Detección de cambio de pestaña o pérdida de foco (visibilitychange / blur):
+  Maven:         mvn test -Dtest=ModoRestringidoTest#testID080_DeteccionDeCambioDePestanaOPerdidaDeFoco
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ModoRestringidoTest#testID080_DeteccionDeCambioDePestanaOPerdidaDeFoco"
+
+* ID-081 - Detección de cierre, recarga o navegación fuera del examen como Incidente:
+  Maven:         mvn test -Dtest=ModoRestringidoTest#testID081_DeteccionDeCierreRecargaONavegacionFueraDelExamenComoIncidente
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ModoRestringidoTest#testID081_DeteccionDeCierreRecargaONavegacionFueraDelExamenComoIncidente"
+
+* ID-082 - Consolidación de señales simultáneas en un único Incidente sin duplicados:
+  Maven:         mvn test -Dtest=ModoRestringidoTest#testID082_ConsolidacionDeSenalesSimultaneasEnUnUnicoIncidenteSinDuplicados
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ModoRestringidoTest#testID082_ConsolidacionDeSenalesSimultaneasEnUnUnicoIncidenteSinDuplicados"
+
+* ID-083 - Flujo de salida voluntaria definitiva mediante el botón SALIR (Confirmación):
+  Maven:         mvn test -Dtest=ModoRestringidoTest#testID083_FlujoDeSalidaVoluntariaDefinitivaMedianteElBotonSalir
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ModoRestringidoTest#testID083_FlujoDeSalidaVoluntariaDefinitivaMedianteElBotonSalir"
+
+* ID-084 - Cancelación del modal de salida voluntaria SALIR y continuidad del examen:
+  Maven:         mvn test -Dtest=ModoRestringidoTest#testID084_CancelacionDelModalDeSalidaVoluntariaSalirYContinuidadDelExamen
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ModoRestringidoTest#testID084_CancelacionDelModalDeSalidaVoluntariaSalirYContinuidadDelExamen"
+
+* ID-085 - Pantalla de bloqueo en espera de decisión docente tras un Incidente:
+  Maven:         mvn test -Dtest=ModoRestringidoTest#testID085_PantallaDeBloqueoEnEsperaDeDecisionDocenteTrasUnIncidente
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ModoRestringidoTest#testID085_PantallaDeBloqueoEnEsperaDeDecisionDocenteTrasUnIncidente"
+
+* ID-086 - Reingreso del alumno al examen tras habilitación del profesor:
+  Maven:         mvn test -Dtest=ModoRestringidoTest#testID086_ReingresoDelAlumnoAlExamenTrasHabilitacionDelProfesor
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ModoRestringidoTest#testID086_ReingresoDelAlumnoAlExamenTrasHabilitacionDelProfesor"
+
+* ID-087 - Nuevo bloqueo automático ante reincidencia tras haber sido reanudado:
+  Maven:         mvn test -Dtest=ModoRestringidoTest#testID087_NuevoBloqueoAutomaticoAnteReincidenciaTrasHaberSidoReanudado
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ModoRestringidoTest#testID087_NuevoBloqueoAutomaticoAnteReincidenciaTrasHaberSidoReanudado"
+
+* ID-093 - Registro de Incidente ocurrido mientras el alumno está Offline y sincronización al reconectar:
+  Maven:         mvn test -Dtest=ModoRestringidoTest#testID093_RegistroDeIncidenteOcurridoMientrasElAlumnoEstaOfflineYSincronizacionAlReconectar
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=ModoRestringidoTest#testID093_RegistroDeIncidenteOcurridoMientrasElAlumnoEstaOfflineYSincronizacionAlReconectar"
+
+
+================================================================================
+LOTE 12: MONITOREO Y SUPERVISIÓN DOCENTE (Casos ID-030, ID-060, ID-061, ID-072 al ID-074 y ID-088 al ID-092)
+Clase: lotes.MonitoreoDocenteTest | Tag: lote-monitoreo-docente
+================================================================================
+
+--- Ejecución del LOTE COMPLETO ---
+Maven:         mvn test -Dgroups="lote-monitoreo-docente"
+Maven Wrapper: .\mvnw.cmd test "-Dgroups=lote-monitoreo-docente"
+
+--- Desglose por TEST INDIVIDUAL ---
+
+* ID-030 - Recepción de entrega y acceso al detalle desde la vista del profesor:
+  Maven:         mvn test -Dtest=MonitoreoDocenteTest#testID030_RecepcionDeEntregaYAccesoAlDetalleDesdeVistaDelProfesor
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=MonitoreoDocenteTest#testID030_RecepcionDeEntregaYAccesoAlDetalleDesdeVistaDelProfesor"
+
+* ID-060 - Visualización de estados por alumno en la tabla de seguimiento del turno:
+  Maven:         mvn test -Dtest=MonitoreoDocenteTest#testID060_VisualizacionDeEstadosPorAlumnoEnTablaDeSeguimientoDelTurno
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=MonitoreoDocenteTest#testID060_VisualizacionDeEstadosPorAlumnoEnTablaDeSeguimientoDelTurno"
+
+* ID-061 - Contadores agregados del turno: asignados, abrieron y enviaron:
+  Maven:         mvn test -Dtest=MonitoreoDocenteTest#testID061_ContadoresAgregadosDelTurnoAsignadosAbrieronYEnviaron
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=MonitoreoDocenteTest#testID061_ContadoresAgregadosDelTurnoAsignadosAbrieronYEnviaron"
+
+* ID-072 - Supervisión en vivo en /monitoreo: tiempo restante, última actividad y cambios pendientes:
+  Maven:         mvn test -Dtest=MonitoreoDocenteTest#testID072_SupervisionEnVivoEnMonitoreoTiempoRestanteUltimaActividadYCambiosPendientes
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=MonitoreoDocenteTest#testID072_SupervisionEnVivoEnMonitoreoTiempoRestanteUltimaActividadYCambiosPendientes"
+
+* ID-073 - Detección de pérdida de conexión / falta de latido en el panel del profesor:
+  Maven:         mvn test -Dtest=MonitoreoDocenteTest#testID073_DeteccionDePerdidaDeConexionFaltaDeLatidoEnPanelDelProfesor
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=MonitoreoDocenteTest#testID073_DeteccionDePerdidaDeConexionFaltaDeLatidoEnPanelDelProfesor"
+
+* ID-074 - Actualización en tiempo real en el panel del profesor cuando un alumno entrega por vencimiento:
+  Maven:         mvn test -Dtest=MonitoreoDocenteTest#testID074_ActualizacionEnTiempoRealEnPanelDelProfesorCuandoAlumnoEntregaPorVencimiento
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=MonitoreoDocenteTest#testID074_ActualizacionEnTiempoRealEnPanelDelProfesorCuandoAlumnoEntregaPorVencimiento"
+
+* ID-088 - Alerta destacada en vivo cuando un alumno entra en estado Incidente con causa reportada:
+  Maven:         mvn test -Dtest=MonitoreoDocenteTest#testID088_AlertaDestacadaEnVivoCuandoUnAlumnoEntraEnEstadoIncidenteConCausaReportada
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=MonitoreoDocenteTest#testID088_AlertaDestacadaEnVivoCuandoUnAlumnoEntraEnEstadoIncidenteConCausaReportada"
+
+* ID-089 - Priorización visual y ordenamiento superior de alumnos en estado Incidente:
+  Maven:         mvn test -Dtest=MonitoreoDocenteTest#testID089_PriorizacionVisualYOrdenamientoSuperiorDeAlumnosEnEstadoIncidente
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=MonitoreoDocenteTest#testID089_PriorizacionVisualYOrdenamientoSuperiorDeAlumnosEnEstadoIncidente"
+
+* ID-090 - Distinción visual clara en monitoreo entre 'Salió y se entregó' e 'Incidente':
+  Maven:         mvn test -Dtest=MonitoreoDocenteTest#testID090_DistincionVisualClaraEnMonitoreoEntreSalioYSeEntregoEIncidente
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=MonitoreoDocenteTest#testID090_DistincionVisualClaraEnMonitoreoEntreSalioYSeEntregoEIncidente"
+
+* ID-091 - Flujo docente de 'Reanudar examen': confirmación y actualización de estados:
+  Maven:         mvn test -Dtest=MonitoreoDocenteTest#testID091_FlujoDocenteDeReanudarExamenConfirmacionYActualizacionDeEstados
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=MonitoreoDocenteTest#testID091_FlujoDocenteDeReanudarExamenConfirmacionYActualizacionDeEstados"
+
+* ID-092 - Bitácora cronológica / historial de eventos de seguridad por alumno:
+  Maven:         mvn test -Dtest=MonitoreoDocenteTest#testID092_BitacoraCronologicaHistorialDeEventosDeSeguridadPorAlumno
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=MonitoreoDocenteTest#testID092_BitacoraCronologicaHistorialDeEventosDeSeguridadPorAlumno"
+
+
+================================================================================
+LOTE 13: GESTIÓN DE CLASES (ROL DEV) Y TURNOS (Casos ID-044 al ID-053)
+Clase: lotes.GestionClasesTurnosTest | Tag: lote-gestion-clases
+================================================================================
+
+--- Ejecución del LOTE COMPLETO ---
+Maven:         mvn test -Dgroups="lote-gestion-clases"
+Maven Wrapper: .\mvnw.cmd test "-Dgroups=lote-gestion-clases"
+
+--- Desglose por TEST INDIVIDUAL ---
+
+* ID-044 - Visualización de las 6 clases predefinidas por día y turno:
+  Maven:         mvn test -Dtest=GestionClasesTurnosTest#testID044_VisualizacionDeLasSeisClasesPredefinidasPorDiaYTurno
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionClasesTurnosTest#testID044_VisualizacionDeLasSeisClasesPredefinidasPorDiaYTurno"
+
+* ID-045 - Creación exitosa de una nueva clase desde el rol dev:
+  Maven:         mvn test -Dtest=GestionClasesTurnosTest#testID045_CreacionExitosaDeUnaNuevaClaseDesdeElRolDev
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionClasesTurnosTest#testID045_CreacionExitosaDeUnaNuevaClaseDesdeElRolDev"
+
+* ID-046 - Edición de una clase existente y actualización de integrantes:
+  Maven:         mvn test -Dtest=GestionClasesTurnosTest#testID046_EdicionDeUnaClaseExistenteYActualizacionDeIntegrantes
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionClasesTurnosTest#testID046_EdicionDeUnaClaseExistenteYActualizacionDeIntegrantes"
+
+* ID-047 - Validación de campos obligatorios al crear o editar una clase:
+  Maven:         mvn test -Dtest=GestionClasesTurnosTest#testID047_ValidacionDeCamposObligatoriosAlCrearOEditarUnaClase
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionClasesTurnosTest#testID047_ValidacionDeCamposObligatoriosAlCrearOEditarUnaClase"
+
+* ID-048 - Restricción de acceso a /dev para roles no autorizados (Profesor y Alumno):
+  Maven:         mvn test -Dtest=GestionClasesTurnosTest#testID048_RestriccionDeAccesoADevParaRolesNoAutorizados
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionClasesTurnosTest#testID048_RestriccionDeAccesoADevParaRolesNoAutorizados"
+
+* ID-049 - Configuración de múltiples turnos de evaluación al crear o editar un examen:
+  Maven:         mvn test -Dtest=GestionClasesTurnosTest#testID049_ConfiguracionDeMultiplesTurnosDeEvaluacionAlCrearOEditarExamen
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionClasesTurnosTest#testID049_ConfiguracionDeMultiplesTurnosDeEvaluacionAlCrearOEditarExamen"
+
+* ID-050 - Validación de compatibilidad de horario del turno con la clase:
+  Maven:         mvn test -Dtest=GestionClasesTurnosTest#testID050_ValidacionDeCompatibilidadDeHorarioDelTurnoConLaClase
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionClasesTurnosTest#testID050_ValidacionDeCompatibilidadDeHorarioDelTurnoConLaClase"
+
+* ID-051 - Asignación y desasignación de alumnos en un turno próximo:
+  Maven:         mvn test -Dtest=GestionClasesTurnosTest#testID051_AsignacionYDesasignacionDeAlumnosEnUnTurnoProximo
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionClasesTurnosTest#testID051_AsignacionYDesasignacionDeAlumnosEnUnTurnoProximo"
+
+* ID-052 - Reasignación automática de un alumno de un turno futuro a otro turno:
+  Maven:         mvn test -Dtest=GestionClasesTurnosTest#testID052_ReasignacionAutomaticaDeUnAlumnoDeUnTurnoFuturoAOtroTurno
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionClasesTurnosTest#testID052_ReasignacionAutomaticaDeUnAlumnoDeUnTurnoFuturoAOtroTurno"
+
+* ID-053 - Bloqueo de edición de horario/duración y bloqueo de quita cuando el turno ya comenzó:
+  Maven:         mvn test -Dtest=GestionClasesTurnosTest#testID053_BloqueoDeEdicionDeHorarioYDuracionYBloqueoDeQuitaCuandoElTurnoYaComenzo
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GestionClasesTurnosTest#testID053_BloqueoDeEdicionDeHorarioYDuracionYBloqueoDeQuitaCuandoElTurnoYaComenzo"
+
+
+================================================================================
+LOTE 14: HERRAMIENTA GEOGEBRA Y CONSTRUCCIONES (Casos ID-024, ID-031 e ID-062)
+Clase: lotes.GeoGebraTest | Tag: lote-geogebra
+================================================================================
+
+--- Ejecución del LOTE COMPLETO ---
+Maven:         mvn test -Dgroups="lote-geogebra"
+Maven Wrapper: .\mvnw.cmd test "-Dgroups=lote-geogebra"
+
+--- Desglose por TEST INDIVIDUAL ---
+
+* ID-024 - Apertura y carga de la herramienta GeoGebra en el examen (< 3s):
+  Maven:         mvn test -Dtest=GeoGebraTest#testID024_AperturaYCargaDeLaHerramientaGeoGebraEnElExamen
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GeoGebraTest#testID024_AperturaYCargaDeLaHerramientaGeoGebraEnElExamen"
+
+* ID-062 - Interacción con el lienzo de GeoGebra y persistencia al minimizar/reabrir:
+  Maven:         mvn test -Dtest=GeoGebraTest#testID062_InteraccionConLienzoDeGeoGebraYPersistenciaAlMinimizarReabrir
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GeoGebraTest#testID062_InteraccionConLienzoDeGeoGebraYPersistenciaAlMinimizarReabrir"
+
+* ID-031 - Envío de construcción en apartado GeoGebra y visualización en la vista del profesor:
+  Maven:         mvn test -Dtest=GeoGebraTest#testID031_EnvioDeConstruccionEnApartadoGeoGebraYVisualizacionEnVistaDelProfesor
+  Maven Wrapper: .\mvnw.cmd test "-Dtest=GeoGebraTest#testID031_EnvioDeConstruccionEnApartadoGeoGebraYVisualizacionEnVistaDelProfesor"
+
+
+================================================================================
+COMPATIBILIDAD MULTI-NAVEGADOR: GOOGLE CHROME Y MICROSOFT EDGE (Caso ID-025)
+================================================================================
+
+* ID-025 en Google Chrome:
+  Maven:         mvn test -DbrowserChannel=chrome -Dtest=EnvioExamenTest#testID026_EnvioExitosoDeExamenCompletoHappyPath
+  Maven Wrapper: .\mvnw.cmd test "-DbrowserChannel=chrome" "-Dtest=EnvioExamenTest#testID026_EnvioExitosoDeExamenCompletoHappyPath"
+
+* ID-025 en Microsoft Edge:
+  Maven:         mvn test -DbrowserChannel=msedge -Dtest=EnvioExamenTest#testID026_EnvioExitosoDeExamenCompletoHappyPath
+  Maven Wrapper: .\mvnw.cmd test "-DbrowserChannel=msedge" "-Dtest=EnvioExamenTest#testID026_EnvioExitosoDeExamenCompletoHappyPath"
 
 ================================================================================
